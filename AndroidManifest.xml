@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="mmozeiko.Squares3D"
+      android:versionCode="1"
+      android:versionName="1.0">
+    <application android:label="Squares 3D">
+        <activity android:name="lv.bubu.Squares3D.Game"
+                  android:label="Squares3D"
+                  android:icon="@drawable/icon"
+                  android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+                  android:screenOrientation="landscape"
+                  android:configChanges="keyboardHidden|orientation">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+    <uses-sdk android:minSdkVersion="7" />
+</manifest> 

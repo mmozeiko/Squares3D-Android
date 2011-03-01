@@ -265,7 +265,7 @@ void RefereeLocal::initEvents()
 void RefereeLocal::processCriticalEvent()
 {
     StringIntPair maxScore = m_scoreBoard->getMostScoreData();
-    if (maxScore.second >= 1) //m_matchPoints)
+    if (maxScore.second >= m_matchPoints)
     {
         string overText;
         if (maxScore.first == m_humanPlayer->m_profile->m_name)

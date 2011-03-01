@@ -4,7 +4,7 @@
 #include "config.h"
 #include "dds.h"
 
-Texture::Texture(const string& name, WrapType wrap)
+Texture::Texture(const string& name, WrapType wrap) : m_wrap(wrap)
 {
     glGenTextures(1, (GLuint*)&m_handle);
     glBindTexture(GL_TEXTURE_2D, m_handle);
@@ -26,31 +26,31 @@ Texture::Texture(const string& name, WrapType wrap)
     {
         Exception("Texture '" + name + "' has invalid header");
     }
-
-    if (header->ddspf.dwFourCC != FOURCC_ATC_RGB && header->ddspf.dwFourCC != FOURCC_ATC_RGBA_EXPLICIT)
-    {
-        Exception("Texture '" + name + "' has invalid FourCC");
-    }
     
     unsigned char* image = file.pointer() + sizeof(DDS_SIGNATURE) + sizeof(DDS_HEADER);
 
     LOG("Loading texture %s, size=%ix%i, mipCount=%i, hasMips=%i", name.c_str(), header->dwWidth, header->dwHeight, header->dwMipMapCount, header->dwHeaderFlags & DDS_HEADER_FLAGS_MIPMAP);
     
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    
+
     {
-        GLenum format = header->ddspf.dwFourCC == FOURCC_ATC_RGB ? GL_ATC_RGB_AMD : GL_ATC_RGBA_EXPLICIT_ALPHA_AMD; 
-        
         unsigned char* ptr = image;
         int level = 0;
         int width = header->dwWidth;
         int height = header->dwHeight;
         while (level < header->dwMipMapCount)
         {
-            GLint size = (std::max<int>(width, 4) * std::max<int>(height, 4) * 4 + (format == GL_ATC_RGB_AMD ? 7 : 3)) / (format == GL_ATC_RGB_AMD ? 8 : 4);
-            
-            LOG(" * level=%i, format=%i, w=%i, h=%i, size=%i", level, format, width, height, size);
-            glCompressedTexImage2D(GL_TEXTURE_2D, level, format, width, height, 0, size, ptr);
+            GLint size;
+            if (header->ddspf.dwFourCC == FOURCC_ETC_RGB)
+            {
+                size = (std::max<int>(width, 4) * std::max<int>(height, 4) * 4 + 7) / 8;
+                glCompressedTexImage2D(GL_TEXTURE_2D, level, GL_ETC1_RGB8_OES, width, height, 0, size, ptr);
+            }
+            else
+            {
+                size = width * height * 2;
+                glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, ptr);
+            }
             
             level++;
             ptr += size;
@@ -59,28 +59,7 @@ Texture::Texture(const string& name, WrapType wrap)
         }
     }
 
-    if (header->dwMipMapCount > 1)
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-    else
-    {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    }
-           
-    switch (wrap)
-    {
-        case Repeat:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            break;
-        case ClampToEdge:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            break;
-    }
+    m_mipmaps = header->dwMipMapCount > 1;
 }
 
 Texture::~Texture()
@@ -91,4 +70,13 @@ Texture::~Texture()
 void Texture::bind() const
 {
     glBindTexture(GL_TEXTURE_2D, m_handle);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_wrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_wrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }

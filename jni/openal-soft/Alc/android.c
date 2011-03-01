@@ -81,7 +81,7 @@ static void* thread_function(void* arg)
     int audioFormat = aluBytesFromFormat(device->Format) == 1 ? ENCODING_PCM_8BIT : ENCODING_PCM_16BIT;
 
     int bufferSizeInBytes = (*env)->CallStaticIntMethod(env, cAudioTrack, 
-        mGetMinBufferSize, sampleRateInHz, channelConfig, audioFormat);
+        mGetMinBufferSize, sampleRateInHz, channelConfig, audioFormat) / 4;
 
     int bufferSizeInSamples = bufferSizeInBytes / aluFrameSizeFromFormat(device->Format);
 

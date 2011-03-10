@@ -38,10 +38,7 @@ class dgCollisionScene: public dgCollision
 		DG_CLASS_ALLOCATOR(allocator)
 		dgNode ();
 		dgNode (dgNode* const sibling, dgNode* const myNode);
-
 		~dgNode ();
-//		void UpdateAABBFromChidren ();
-//		void SetAABB (const dgVector& minBox, const dgVector& maxBox);
 
 		dgVector m_minBox;
 		dgVector m_maxBox;
@@ -61,11 +58,11 @@ class dgCollisionScene: public dgCollision
 		~dgProxy();
 
 		dgMatrix m_matrix;
+		void* m_userData;
 		dgCollision* m_shape;
 		dgCollisionScene* m_owner;
 		dgList<dgProxy*>::dgListNode* m_myNode;
 	};
-
 
 	dgCollisionScene(dgWorld* const world);
 	dgCollisionScene(dgWorld* const world, dgDeserialize deserialization, void* const userData);
@@ -74,14 +71,16 @@ class dgCollisionScene: public dgCollision
 	void* GetFirstProxy () const;
 	void* GetNextProxy (void* const proxy) const;
 	void* AddProxy (dgCollision* const shape, const dgMatrix& matrix);
+	void SetProxyUserData (void* const proxy, void* const userData);
+	void* GetProxyUserData (void* const proxy) const;
 	void RemoveProxy (void* const proxy);
 	void ImproveTotalFitness();
 
 	dgMatrix GetProxyMatrix (void* const proxy);
 	void SetProxyMatrix (void* const proxy, const dgMatrix& matrix);
 
-	void CollidePair (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
-	void CollidePairSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
+	void CollidePair (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
+	void CollidePairSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
 
 	void SetCollisionCallback (dgCollisionMeshCollisionCallback debugCallback);
 

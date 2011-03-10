@@ -168,6 +168,51 @@ dgFloat64 dgConvexHull4dTetraherum::Evalue (const dgHullVector* const pointArray
 	return det;
 }
 
+
+dgBigVector dgConvexHull4dTetraherum::CircumSphereCenter (const dgHullVector* const pointArray) const
+{
+	dgGoogol matrix[4][4];
+
+	dgBigVector points[4];
+	points[0] = pointArray[m_faces[0].m_index[0]];
+	points[1] = pointArray[m_faces[0].m_index[1]];
+	points[2] = pointArray[m_faces[0].m_index[2]];
+	points[3] = pointArray[m_faces[0].m_otherVertex];
+
+	for (dgInt32 i = 0; i < 4; i ++) {
+		for (dgInt32 j = 0; j < 3; j ++) {
+			matrix[i][j] = dgGoogol (points[i][j]);
+		}
+		matrix[i][3] = dgGoogol (1.0f);
+	}
+	dgGoogol det (Determinant4x4(matrix));
+	dgFloat64 invDen = dgFloat32 (1.0f) / (det.GetAproximateValue() * dgFloat32 (2.0f));
+
+	dgBigVector centerOut;
+	dgFloat32 sign = dgFloat32 (1.0f);
+	for (dgInt32 k = 0; k < 3; k ++) {
+		for (dgInt32 i = 0; i < 4; i ++) {
+			matrix[i][0] = dgGoogol (points[i][3]);
+			for (dgInt32 j = 0; j < 2; j ++) {
+				dgInt32 j1 = (j < k) ? j : j + 1; 
+				matrix[i][j + 1] = dgGoogol (points[i][j1]);
+			}
+			matrix[i][3] = dgGoogol (1.0f);
+		}
+		dgGoogol det (Determinant4x4(matrix));
+		dgFloat64 val = det.GetAproximateValue() * sign;
+		sign *= dgFloat32 (-1.0f);
+		centerOut[k] = val * invDen; 
+	}
+	centerOut[3] = dgFloat32 (0.0f);
+//	dgBigVector radius (points[0] - centerOut);
+//dgFloat32 a = (points[0] - centerOut) % (points[0] - centerOut);
+//dgFloat32 b = (points[1] - centerOut) % (points[1] - centerOut);
+//dgFloat32 c = (points[2] - centerOut) % (points[2] - centerOut);
+//dgFloat32 d = (points[3] - centerOut) % (points[3] - centerOut);
+	return centerOut;
+}
+
 dgConvexHull4dTetraherum::dgTetrahedrumPlane dgConvexHull4dTetraherum::GetPlaneEquation (const dgHullVector* const points) const
 {
 	const dgBigVector &p0 = points[m_faces[0].m_index[0]];
@@ -239,7 +284,7 @@ void dgConvexHull4d::BuildHull (dgMemoryAllocator* const allocator, const dgBigV
 	treeCount *= 2;
 
 	dgStack<dgHullVector> points (count);
-	dgStack<dgAABBPointTree4dClump> treePool (treeCount);
+	dgStack<dgAABBPointTree4dClump> treePool (treeCount + 256);
 
 	count = InitVertexArray(&points[0], vertexCloud, count, &treePool[0], treePool.GetSizeInBytes());
 	if (m_count >= 4) {

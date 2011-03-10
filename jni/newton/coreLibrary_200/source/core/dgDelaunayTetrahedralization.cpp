@@ -165,18 +165,6 @@ void dgDelaunayTetrahedralization::RemoveUpperHull ()
 //		dgFloat64 w = GetTetraVolume (p0, p1, p2, p3);
 		dgFloat64 w = GetTetraVolume (tetra);
 		if (w >= dgFloat64 (0.0f)) {
-//			for (dgInt32 i = 0; i < 4; i ++) {
-//				dgListNode* const twinNode = tetra->m_faces[i].m_twin;
-//				if (twinNode) {
-//					dgConvexHull4dTetraherum* const twinTetra = &twinNode->GetInfo();
-//					for (dgInt32 j = 0; j < 4; j ++) {
-//						if (twinTetra->m_faces[j].m_twin == node) {
-//							twinTetra->m_faces[j].m_twin = NULL;
-//							break;
-//						}
-//					}
-//				}
-//			}
 			DeleteFace(node);
 		}
 	}
@@ -186,6 +174,24 @@ void dgDelaunayTetrahedralization::RemoveUpperHull ()
 	#endif
 }
 
+
+void dgDelaunayTetrahedralization::DeleteFace (dgListNode* const node)
+{
+	dgConvexHull4dTetraherum* const tetra = &node->GetInfo();
+	for (dgInt32 i = 0; i < 4; i ++) {
+		dgListNode* const twinNode = tetra->m_faces[i].m_twin;
+		if (twinNode) {
+			dgConvexHull4dTetraherum* const twinTetra = &twinNode->GetInfo();
+			for (dgInt32 j = 0; j < 4; j ++) {
+				if (twinTetra->m_faces[j].m_twin == node) {
+					twinTetra->m_faces[j].m_twin = NULL;
+					break;
+				}
+			}
+		}
+	}
+	dgConvexHull4d::DeleteFace (node);
+}
 
 //dgFloat64 dgDelaunayTetrahedralization::GetTetraVolume (const dgBigVector& p0, const dgBigVector& p1, const dgBigVector& p2, const dgBigVector& p3) const
 dgFloat64 dgDelaunayTetrahedralization::GetTetraVolume (const dgConvexHull4dTetraherum* const tetra) const

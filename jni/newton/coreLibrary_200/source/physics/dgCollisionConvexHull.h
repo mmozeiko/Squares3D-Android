@@ -24,7 +24,6 @@
 
 #include "dgCollisionConvex.h"
 
-//#define DG_USE_OLD_CONVEXHULL
 
 class dgCollisionConvexHull: public dgCollisionConvex  
 {
@@ -42,12 +41,6 @@ class dgCollisionConvexHull: public dgCollisionConvex
 	dgBigVector FaceNormal (const dgEdge *face, const dgVector* const pool) const;
 	bool CheckConvex (dgPolyhedra& polyhedra, const dgVector* hullVertexArray) const;
 
-#ifdef DG_USE_OLD_CONVEXHULL 
-	bool RemoveCoplanarEdge (dgPolyhedra& convex, dgVector* const hullVertexArray) const;	
-	dgBigVector FaceNormal (const dgEdge *face, const dgVector* const pool) const;
-	dgInt32 BruteForceSupportVertex (int count, dgVector* array, const dgBigVector& dir) const;
-#endif
-
 	virtual dgInt32 CalculateSignature () const;
 	virtual void SetCollisionBBox (const dgVector& p0, const dgVector& p1);
 	virtual void DebugCollision (const dgMatrix& matrix, OnDebugCollisionMeshCallback callback, void* const userData) const;
@@ -58,13 +51,10 @@ class dgCollisionConvexHull: public dgCollisionConvex
 	virtual void SetBreakImpulse(dgFloat32 force);
 	virtual dgFloat32 GetBreakImpulse() const;
 
-
 	dgFloat32 m_destructionImpulse;
 	dgInt32 m_faceCount;
 	dgInt32 m_boundPlanesCount;
 	dgConvexSimplexEdge** m_faceArray;
-
-
 
 	friend class dgWorld;
 	friend class dgCollisionConvex;

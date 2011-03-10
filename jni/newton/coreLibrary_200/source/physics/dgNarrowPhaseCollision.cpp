@@ -715,24 +715,24 @@ dgInt32 dgWorld::ClosestPoint(
 
 	} else if (collisionA->IsType (dgCollision::dgConvexCollision_RTTI) && collisionB->IsType (dgCollision::dgConvexCollision_RTTI)) {
 		dgInt32 flag;
-		dgCollisionParamProxi proxi(threadIndex);
+		dgCollisionParamProxy proxy(threadIndex);
 		dgContactPoint contacts[16];
 
-		proxi.m_referenceBody = &collideBodyA;
-		proxi.m_referenceCollision = collideBodyA.m_collision;
-		proxi.m_referenceMatrix = collideBodyA.m_collisionWorldMatrix;
+		proxy.m_referenceBody = &collideBodyA;
+		proxy.m_referenceCollision = collideBodyA.m_collision;
+		proxy.m_referenceMatrix = collideBodyA.m_collisionWorldMatrix;
 
-		proxi.m_floatingBody = &collideBodyB;
-		proxi.m_floatingCollision = collideBodyB.m_collision;
-		proxi.m_floatingMatrix = collideBodyB.m_collisionWorldMatrix ;
+		proxy.m_floatingBody = &collideBodyB;
+		proxy.m_floatingCollision = collideBodyB.m_collision;
+		proxy.m_floatingMatrix = collideBodyB.m_collisionWorldMatrix ;
 
-		proxi.m_timestep = dgFloat32 (0.0f);
-		proxi.m_penetrationPadding = dgFloat32 (0.0f);
-		proxi.m_unconditionalCast = 1;
-		proxi.m_continueCollision = 0;
-		proxi.m_maxContacts = 16;
-		proxi.m_contacts = &contacts[0];
-		flag = ClosestPoint (proxi);
+		proxy.m_timestep = dgFloat32 (0.0f);
+		proxy.m_penetrationPadding = dgFloat32 (0.0f);
+		proxy.m_unconditionalCast = 1;
+		proxy.m_continueCollision = 0;
+		proxy.m_maxContacts = 16;
+		proxy.m_contacts = &contacts[0];
+		flag = ClosestPoint (proxy);
 
 		if (flag) {
 			contactA.m_x = contacts[0].m_point.m_x;
@@ -784,20 +784,20 @@ dgInt32 dgWorld::ClosestCompoundPoint (
 	retFlag = 0;
 	if (collisionB->m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
 		dgFloat32 minDist2;
-		dgCollisionParamProxi proxi(threadIndex);
+		dgCollisionParamProxy proxy(threadIndex);
 		dgContactPoint contacts[16];
 
-		proxi.m_referenceBody = compoundConvexA;
-		proxi.m_floatingBody = collisionB;
-		proxi.m_floatingCollision = collisionB->m_collision;
-		proxi.m_floatingMatrix = collisionB->m_collisionWorldMatrix ;
+		proxy.m_referenceBody = compoundConvexA;
+		proxy.m_floatingBody = collisionB;
+		proxy.m_floatingCollision = collisionB->m_collision;
+		proxy.m_floatingMatrix = collisionB->m_collisionWorldMatrix ;
 
-		proxi.m_timestep = dgFloat32 (0.0f);
-		proxi.m_penetrationPadding = dgFloat32 (0.0f);
-		proxi.m_unconditionalCast = 1;
-		proxi.m_continueCollision = 0;
-		proxi.m_maxContacts = 16;
-		proxi.m_contacts = &contacts[0];
+		proxy.m_timestep = dgFloat32 (0.0f);
+		proxy.m_penetrationPadding = dgFloat32 (0.0f);
+		proxy.m_unconditionalCast = 1;
+		proxy.m_continueCollision = 0;
+		proxy.m_maxContacts = 16;
+		proxy.m_contacts = &contacts[0];
 
 		dgMatrix saveCollMatrix (compoundConvexA->m_collisionWorldMatrix);
 		minDist2 = dgFloat32 (1.0e10f);
@@ -807,9 +807,9 @@ dgInt32 dgWorld::ClosestCompoundPoint (
 
 			compoundConvexA->m_collision = collisionArray[i];
 			compoundConvexA->m_collisionWorldMatrix = collisionArray[i]->m_offset * saveCollMatrix;
-			proxi.m_referenceCollision = compoundConvexA->m_collision;
-			proxi.m_referenceMatrix = compoundConvexA->m_collisionWorldMatrix;
-			flag = ClosestPoint (proxi);
+			proxy.m_referenceCollision = compoundConvexA->m_collision;
+			proxy.m_referenceMatrix = compoundConvexA->m_collisionWorldMatrix;
+			flag = ClosestPoint (proxy);
 			if (flag) {
 				dgFloat32 dist2;
 				retFlag = 1;
@@ -826,7 +826,7 @@ dgInt32 dgWorld::ClosestCompoundPoint (
 	} else {
 		dgInt32 count1;
 		dgFloat32 minDist2;
-		dgCollisionParamProxi proxi(threadIndex);
+		dgCollisionParamProxy proxy(threadIndex);
 		dgContactPoint contacts[16];
 		dgMatrix* collisionMatrixArray1;
 		dgCollisionConvex** collisionArray1;
@@ -842,30 +842,30 @@ dgInt32 dgWorld::ClosestCompoundPoint (
 		collisionArray1 = compoundCollision1->m_array;
 		collisionMatrixArray1 = compoundCollision1->m_collisionMatrix;
 
-		proxi.m_referenceBody = compoundConvexA;
-		proxi.m_floatingBody = collisionB;
-		proxi.m_timestep = dgFloat32 (0.0f);
-		proxi.m_penetrationPadding = dgFloat32 (0.0f);
-		proxi.m_unconditionalCast = 1;
-		proxi.m_continueCollision = 0;
-		proxi.m_maxContacts = 16;
-		proxi.m_contacts = &contacts[0];
+		proxy.m_referenceBody = compoundConvexA;
+		proxy.m_floatingBody = collisionB;
+		proxy.m_timestep = dgFloat32 (0.0f);
+		proxy.m_penetrationPadding = dgFloat32 (0.0f);
+		proxy.m_unconditionalCast = 1;
+		proxy.m_continueCollision = 0;
+		proxy.m_maxContacts = 16;
+		proxy.m_contacts = &contacts[0];
 
 		minDist2 = dgFloat32 (1.0e10f);
 		for (dgInt32 i = 0; i < count; i ++) {
 			compoundConvexA->m_collision = collisionArray[i];
 			compoundConvexA->m_collisionWorldMatrix = collisionArray[i]->m_offset * saveCollMatrix;
 
-			proxi.m_referenceCollision = compoundConvexA->m_collision;
-			proxi.m_referenceMatrix = compoundConvexA->m_collisionWorldMatrix;
+			proxy.m_referenceCollision = compoundConvexA->m_collision;
+			proxy.m_referenceMatrix = compoundConvexA->m_collisionWorldMatrix;
 			for (dgInt32 j = 0; j < count1; j ++) {
 				dgInt32 flag;
 				collisionB->m_collision = collisionArray1[j];
 				collisionB->m_collisionWorldMatrix = collisionArray1[j]->m_offset * saveCollMatrix1;
 
-				proxi.m_floatingCollision = collisionB->m_collision;
-				proxi.m_floatingMatrix = collisionB->m_collisionWorldMatrix ;
-				flag = ClosestPoint (proxi);
+				proxy.m_floatingCollision = collisionB->m_collision;
+				proxy.m_floatingMatrix = collisionB->m_collisionWorldMatrix ;
+				flag = ClosestPoint (proxy);
 				if (flag) {
 					dgFloat32 dist2;
 					retFlag = 1;
@@ -1376,26 +1376,20 @@ void dgWorld::ProcessContacts (dgCollidingPairCollector::dgPair* const pair, dgF
 
 dgInt32 dgWorld::ValidateContactCache (dgBody* const convexBody, dgBody* const otherBody, dgContact* const contact) const
 {
-	dgInt32 contactCount;
-
 	_ASSERTE (contact && (contact->GetId() == dgContactConstraintId));
 	_ASSERTE ((contact->GetBody0() == otherBody) || (contact->GetBody1() == otherBody));
 	_ASSERTE ((contact->GetBody0() == convexBody) || (contact->GetBody1() == convexBody));
 
-	contactCount = 0;
+	dgInt32 contactCount = 0;
 
 #ifdef DG_USE_CACHE_CONTACTS
-	dgBody* body0;
-	dgBody* body1;
-	dgFloat32 err2;
-	dgList<dgContactMaterial>::dgListNode *ptr;
-#define DG_CACHE_DIST_TOL dgFloat32 (1.0e-3f)
+	#define DG_CACHE_DIST_TOL dgFloat32 (1.0e-3f)
 
-	body0 = contact->GetBody0();
+	dgBody* const body0 = contact->GetBody0();
 	dgVector error0 (contact->m_prevPosit0 - body0->m_matrix.m_posit);
-	err2 = error0 % error0;
+	dgFloat32 err2 = error0 % error0;
 	if (err2 < (DG_CACHE_DIST_TOL * DG_CACHE_DIST_TOL)) {
-		body1 = contact->GetBody1();
+		dgBody* const body1 = contact->GetBody1();
 		dgVector error1 (contact->m_prevPosit1 - body1->m_matrix.m_posit);
 		err2 = error1 % error1;
 		if (err2 < (DG_CACHE_DIST_TOL * DG_CACHE_DIST_TOL)) {
@@ -1409,7 +1403,7 @@ dgInt32 dgWorld::ValidateContactCache (dgBody* const convexBody, dgBody* const o
 					dgMatrix matrix1 (dgMatrix (contact->m_prevRotation1, contact->m_prevPosit1).Inverse() * body1->m_matrix);
 
 					dgList<dgContactMaterial>& list = *contact;
-					for (ptr = list.GetFirst(); ptr; ptr = ptr->GetNext()) {
+					for (dgList<dgContactMaterial>::dgListNode *ptr = list.GetFirst(); ptr; ptr = ptr->GetNext()) {
 						dgContactMaterial& contactMaterial = ptr->GetInfo();
 						dgVector p0 (matrix0.TransformVector (contactMaterial.m_point));
 						dgVector p1 (matrix1.TransformVector (contactMaterial.m_point));
@@ -1426,8 +1420,6 @@ dgInt32 dgWorld::ValidateContactCache (dgBody* const convexBody, dgBody* const o
 			}
 		}
 	}
-
-
 #endif
 
 	return contactCount;
@@ -1435,7 +1427,7 @@ dgInt32 dgWorld::ValidateContactCache (dgBody* const convexBody, dgBody* const o
 
 
 
-void dgWorld::CompoundContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+void dgWorld::CompoundContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
 {
 	dgInt32 contactCount;
 	dgBody* otherBody; 
@@ -1448,11 +1440,11 @@ void dgWorld::CompoundContactsSimd (dgCollidingPairCollector::dgPair* const pair
 	otherBody = pair->m_body1;
 
 	pair->m_contactCount = 0;
-	proxi.m_contacts = contacts;
+	proxy.m_contacts = contacts;
 
 	pair->m_isTrigger = 0;
-	proxi.m_isTriggerVolume = 0;
-	proxi.m_inTriggerVolume = 0;
+	proxy.m_isTriggerVolume = 0;
+	proxy.m_inTriggerVolume = 0;
 
 	if (constraint) {
 		contactCount = ValidateContactCache (compoundBody, otherBody, constraint);
@@ -1463,7 +1455,7 @@ void dgWorld::CompoundContactsSimd (dgCollidingPairCollector::dgPair* const pair
 		}
 	}
 
-	contactCount = ((dgCollisionCompound *) compoundBody->m_collision)->CalculateContacts(pair, proxi, 1);
+	contactCount = ((dgCollisionCompound *) compoundBody->m_collision)->CalculateContacts(pair, proxy, 1);
 
 	if (contactCount) {
 		// prune close contacts
@@ -1473,7 +1465,7 @@ void dgWorld::CompoundContactsSimd (dgCollidingPairCollector::dgPair* const pair
 }
 
 
-void dgWorld::CompoundContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+void dgWorld::CompoundContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
 {
 	dgInt32 contactCount;
 	dgBody* otherBody; 
@@ -1486,11 +1478,11 @@ void dgWorld::CompoundContacts (dgCollidingPairCollector::dgPair* const pair, dg
 	otherBody = pair->m_body1;
 
 	pair->m_contactCount = 0;
-	proxi.m_contacts = contacts;
+	proxy.m_contacts = contacts;
 
 	pair->m_isTrigger = 0;
-	proxi.m_isTriggerVolume = 0;
-	proxi.m_inTriggerVolume = 0;
+	proxy.m_isTriggerVolume = 0;
+	proxy.m_inTriggerVolume = 0;
 
 	if (constraint) {
 		contactCount = ValidateContactCache (compoundBody, otherBody, constraint);
@@ -1501,7 +1493,7 @@ void dgWorld::CompoundContacts (dgCollidingPairCollector::dgPair* const pair, dg
 		}
 	}
 	
-	contactCount = ((dgCollisionCompound *) compoundBody->m_collision)->CalculateContacts(pair, proxi, 0);
+	contactCount = ((dgCollisionCompound *) compoundBody->m_collision)->CalculateContacts(pair, proxy, 0);
 
 	if (contactCount) {
 		// prune close contacts
@@ -1511,7 +1503,7 @@ void dgWorld::CompoundContacts (dgCollidingPairCollector::dgPair* const pair, dg
 
 
 
-void dgWorld::ConvexContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+void dgWorld::ConvexContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
 {
 	dgInt32 contactCount;
 	dgBody* otherBody; 
@@ -1533,8 +1525,8 @@ void dgWorld::ConvexContactsSimd (dgCollidingPairCollector::dgPair* const pair, 
 		}
 	}
 
-//	proxi.m_maxContacts = DG_MAX_CONTATCS;
-	proxi.m_contacts = pair->m_contactBuffer;
+//	proxy.m_maxContacts = DG_MAX_CONTATCS;
+	proxy.m_contacts = pair->m_contactBuffer;
 
 	if (otherBody->m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
 		if (convexBody->m_invMass.m_w <= dgFloat32 (1.0e-6f)) {
@@ -1548,34 +1540,34 @@ void dgWorld::ConvexContactsSimd (dgCollidingPairCollector::dgPair* const pair, 
 		_ASSERTE (pair->m_body0->m_collision->IsType (dgCollision::dgConvexCollision_RTTI));
 		_ASSERTE (pair->m_body1->m_collision->IsType (dgCollision::dgConvexCollision_RTTI));
 
-		proxi.m_referenceBody = convexBody;
-		proxi.m_floatingBody = otherBody;
-		proxi.m_referenceCollision = convexBody->m_collision;
-		proxi.m_floatingCollision = otherBody->m_collision;
-		proxi.m_referenceMatrix = convexBody->m_collisionWorldMatrix;
-		proxi.m_floatingMatrix = otherBody->m_collisionWorldMatrix;
-		//contactCount = CalculateConvexToConvexContacts (proxi);
-		pair->m_contactCount =  dgInt16 (CalculateConvexToConvexContactsSimd (proxi));
-		pair->m_isTrigger = proxi.m_inTriggerVolume;
+		proxy.m_referenceBody = convexBody;
+		proxy.m_floatingBody = otherBody;
+		proxy.m_referenceCollision = convexBody->m_collision;
+		proxy.m_floatingCollision = otherBody->m_collision;
+		proxy.m_referenceMatrix = convexBody->m_collisionWorldMatrix;
+		proxy.m_floatingMatrix = otherBody->m_collisionWorldMatrix;
+		//contactCount = CalculateConvexToConvexContacts (proxy);
+		pair->m_contactCount =  dgInt16 (CalculateConvexToConvexContactsSimd (proxy));
+		pair->m_isTrigger = proxy.m_inTriggerVolume;
 
 	} else {
 		_ASSERTE (pair->m_body0->m_collision->IsType (dgCollision::dgConvexCollision_RTTI));
 		_ASSERTE (convexBody->m_collision->IsType (dgCollision::dgConvexCollision_RTTI));
 
-		proxi.m_referenceBody = convexBody;
-		proxi.m_floatingBody = otherBody;
-		proxi.m_referenceCollision = convexBody->m_collision;
-		proxi.m_floatingCollision = otherBody->m_collision;
-		proxi.m_referenceMatrix = convexBody->m_collisionWorldMatrix ;
-		proxi.m_floatingMatrix = otherBody->m_collisionWorldMatrix;
-		//contactCount = CalculateConvexToNonConvexContacts (proxi);
-		pair->m_contactCount = dgInt16 (CalculateConvexToNonConvexContactsSimd (proxi));
-		pair->m_isTrigger = proxi.m_inTriggerVolume;
+		proxy.m_referenceBody = convexBody;
+		proxy.m_floatingBody = otherBody;
+		proxy.m_referenceCollision = convexBody->m_collision;
+		proxy.m_floatingCollision = otherBody->m_collision;
+		proxy.m_referenceMatrix = convexBody->m_collisionWorldMatrix ;
+		proxy.m_floatingMatrix = otherBody->m_collisionWorldMatrix;
+		//contactCount = CalculateConvexToNonConvexContacts (proxy);
+		pair->m_contactCount = dgInt16 (CalculateConvexToNonConvexContactsSimd (proxy));
+		pair->m_isTrigger = proxy.m_inTriggerVolume;
 	}
 }
 
 
-void dgWorld::ConvexContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+void dgWorld::ConvexContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
 {
 	dgInt32 contactCount = 0;
 	dgContact* const constraint = pair->m_contact;
@@ -1592,8 +1584,8 @@ void dgWorld::ConvexContacts (dgCollidingPairCollector::dgPair* const pair, dgCo
 		}
 	}
 
-//	proxi.m_maxContacts = DG_MAX_CONTATCS;
-	proxi.m_contacts = pair->m_contactBuffer;
+//	proxy.m_maxContacts = DG_MAX_CONTATCS;
+	proxy.m_contacts = pair->m_contactBuffer;
 
 	if (otherBody->m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
 		if (convexBody->m_invMass.m_w <= dgFloat32 (1.0e-6f)) {
@@ -1607,112 +1599,106 @@ void dgWorld::ConvexContacts (dgCollidingPairCollector::dgPair* const pair, dgCo
 		_ASSERTE (pair->m_body0->m_collision->IsType (dgCollision::dgConvexCollision_RTTI));
 		_ASSERTE (pair->m_body1->m_collision->IsType (dgCollision::dgConvexCollision_RTTI));
 
-		proxi.m_referenceBody = convexBody;
-		proxi.m_floatingBody = otherBody;
-		proxi.m_referenceCollision = convexBody->m_collision;
-		proxi.m_floatingCollision = otherBody->m_collision;
-		proxi.m_referenceMatrix = convexBody->m_collisionWorldMatrix;
-		proxi.m_floatingMatrix = otherBody->m_collisionWorldMatrix;
-		pair->m_contactCount =  dgInt16 (CalculateConvexToConvexContacts (proxi));
-		pair->m_isTrigger = proxi.m_inTriggerVolume;
+		proxy.m_referenceBody = convexBody;
+		proxy.m_floatingBody = otherBody;
+		proxy.m_referenceCollision = convexBody->m_collision;
+		proxy.m_floatingCollision = otherBody->m_collision;
+		proxy.m_referenceMatrix = convexBody->m_collisionWorldMatrix;
+		proxy.m_floatingMatrix = otherBody->m_collisionWorldMatrix;
+		pair->m_contactCount =  dgInt16 (CalculateConvexToConvexContacts (proxy));
+		pair->m_isTrigger = proxy.m_inTriggerVolume;
 
 	} else {
 		_ASSERTE (pair->m_body0->m_collision->IsType (dgCollision::dgConvexCollision_RTTI));
 		_ASSERTE (convexBody->m_collision->IsType (dgCollision::dgConvexCollision_RTTI));
 
-		proxi.m_referenceBody = convexBody;
-		proxi.m_floatingBody = otherBody;
-		proxi.m_referenceCollision = convexBody->m_collision;
-		proxi.m_floatingCollision = otherBody->m_collision;
-		proxi.m_referenceMatrix = convexBody->m_collisionWorldMatrix ;
-		proxi.m_floatingMatrix = otherBody->m_collisionWorldMatrix;
-		pair->m_contactCount = dgInt16 (CalculateConvexToNonConvexContacts (proxi));
-		pair->m_isTrigger = proxi.m_inTriggerVolume;
+		proxy.m_referenceBody = convexBody;
+		proxy.m_floatingBody = otherBody;
+		proxy.m_referenceCollision = convexBody->m_collision;
+		proxy.m_floatingCollision = otherBody->m_collision;
+		proxy.m_referenceMatrix = convexBody->m_collisionWorldMatrix ;
+		proxy.m_floatingMatrix = otherBody->m_collisionWorldMatrix;
+		pair->m_contactCount = dgInt16 (CalculateConvexToNonConvexContacts (proxy));
+		pair->m_isTrigger = proxy.m_inTriggerVolume;
 	}
 }
 
 
 
-void dgWorld::SceneContactsSimd (const dgCollisionScene::dgProxy& sceneProxy, dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+void dgWorld::SceneContactsSimd (const dgCollisionScene::dgProxy& sceneProxy, dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
 {
 	_ASSERTE (pair->m_body1->GetCollision()->IsType(dgCollision::dgCollisionScene_RTTI));
 	if (sceneProxy.m_shape->IsType (dgCollision::dgConvexCollision_RTTI)) {
-		proxi.m_floatingCollision = sceneProxy.m_shape;
-		proxi.m_floatingMatrix = sceneProxy.m_matrix;
-		proxi.m_maxContacts = ((DG_MAX_CONTATCS - pair->m_contactCount) > 16) ? 16 : DG_MAX_CONTATCS - pair->m_contactCount;
+		proxy.m_floatingCollision = sceneProxy.m_shape;
+		proxy.m_floatingMatrix = sceneProxy.m_matrix;
+		proxy.m_maxContacts = ((DG_MAX_CONTATCS - pair->m_contactCount) > 16) ? 16 : DG_MAX_CONTATCS - pair->m_contactCount;
 
-		proxi.m_contacts = &pair->m_contactBuffer[pair->m_contactCount];
-		pair->m_contactCount = pair->m_contactCount + dgInt16 (CalculateConvexToConvexContactsSimd (proxi));
+		proxy.m_contacts = &pair->m_contactBuffer[pair->m_contactCount];
+		pair->m_contactCount = pair->m_contactCount + dgInt16 (CalculateConvexToConvexContactsSimd (proxy));
 		if (pair->m_contactCount > (DG_MAX_CONTATCS - 2 * (DG_CONSTRAINT_MAX_ROWS / 3))) {
 			pair->m_contactCount = dgInt16 (ReduceContacts (pair->m_contactCount, pair->m_contactBuffer, DG_CONSTRAINT_MAX_ROWS / 3, DG_REDUCE_CONTACT_TOLERANCE));
 		}
-//		pair->m_isTrigger = proxi.m_inTriggerVolume;
+//		pair->m_isTrigger = proxy.m_inTriggerVolume;
 
 	} else {
-		proxi.m_floatingCollision = sceneProxy.m_shape;
-		proxi.m_floatingMatrix = sceneProxy.m_matrix;
-		proxi.m_maxContacts = ((DG_MAX_CONTATCS - pair->m_contactCount) > 32) ? 32 : DG_MAX_CONTATCS - pair->m_contactCount;
+		proxy.m_floatingCollision = sceneProxy.m_shape;
+		proxy.m_floatingMatrix = sceneProxy.m_matrix;
+		proxy.m_maxContacts = ((DG_MAX_CONTATCS - pair->m_contactCount) > 32) ? 32 : DG_MAX_CONTATCS - pair->m_contactCount;
 
-		proxi.m_contacts = &pair->m_contactBuffer[pair->m_contactCount];
-		pair->m_contactCount = pair->m_contactCount + dgInt16 (CalculateConvexToNonConvexContactsSimd (proxi));
+		proxy.m_contacts = &pair->m_contactBuffer[pair->m_contactCount];
+		pair->m_contactCount = pair->m_contactCount + dgInt16 (CalculateConvexToNonConvexContactsSimd (proxy));
 		if (pair->m_contactCount > (DG_MAX_CONTATCS - 2 * (DG_CONSTRAINT_MAX_ROWS / 3))) {
 			pair->m_contactCount = dgInt16 (ReduceContacts (pair->m_contactCount, pair->m_contactBuffer, DG_CONSTRAINT_MAX_ROWS / 3, DG_REDUCE_CONTACT_TOLERANCE));
 		}
-//		pair->m_isTrigger = proxi.m_inTriggerVolume;
+//		pair->m_isTrigger = proxy.m_inTriggerVolume;
 	}
 }
 
 
-void dgWorld::SceneContacts (const dgCollisionScene::dgProxy& sceneProxy, dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+void dgWorld::SceneContacts (const dgCollisionScene::dgProxy& sceneProxy, dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
 {
 	_ASSERTE (pair->m_body1->GetCollision()->IsType(dgCollision::dgCollisionScene_RTTI));
 	if (sceneProxy.m_shape->IsType (dgCollision::dgConvexCollision_RTTI)) {
-		proxi.m_floatingCollision = sceneProxy.m_shape;
-		proxi.m_floatingMatrix = sceneProxy.m_matrix;
-		proxi.m_maxContacts = ((DG_MAX_CONTATCS - pair->m_contactCount) > 16) ? 16 : DG_MAX_CONTATCS - pair->m_contactCount;
+		proxy.m_floatingCollision = sceneProxy.m_shape;
+		proxy.m_floatingMatrix = sceneProxy.m_matrix;
+		proxy.m_maxContacts = ((DG_MAX_CONTATCS - pair->m_contactCount) > 16) ? 16 : DG_MAX_CONTATCS - pair->m_contactCount;
 
-		proxi.m_contacts = &pair->m_contactBuffer[pair->m_contactCount];
-		pair->m_contactCount = pair->m_contactCount + dgInt16 (CalculateConvexToConvexContacts (proxi));
+		proxy.m_contacts = &pair->m_contactBuffer[pair->m_contactCount];
+		pair->m_contactCount = pair->m_contactCount + dgInt16 (CalculateConvexToConvexContacts (proxy));
 		if (pair->m_contactCount > (DG_MAX_CONTATCS - 2 * (DG_CONSTRAINT_MAX_ROWS / 3))) {
 			pair->m_contactCount = dgInt16 (ReduceContacts (pair->m_contactCount, pair->m_contactBuffer, DG_CONSTRAINT_MAX_ROWS / 3, DG_REDUCE_CONTACT_TOLERANCE));
 		}
-//		pair->m_isTrigger = proxi.m_inTriggerVolume;
+//		pair->m_isTrigger = proxy.m_inTriggerVolume;
 
 	} else {
-		proxi.m_floatingCollision = sceneProxy.m_shape;
-		proxi.m_floatingMatrix = sceneProxy.m_matrix;
-		proxi.m_maxContacts = ((DG_MAX_CONTATCS - pair->m_contactCount) > 32) ? 32 : DG_MAX_CONTATCS - pair->m_contactCount;
+		proxy.m_floatingCollision = sceneProxy.m_shape;
+		proxy.m_floatingMatrix = sceneProxy.m_matrix;
+		proxy.m_maxContacts = ((DG_MAX_CONTATCS - pair->m_contactCount) > 32) ? 32 : DG_MAX_CONTATCS - pair->m_contactCount;
 
-		proxi.m_contacts = &pair->m_contactBuffer[pair->m_contactCount];
-		pair->m_contactCount = pair->m_contactCount + dgInt16 (CalculateConvexToNonConvexContacts (proxi));
+		proxy.m_contacts = &pair->m_contactBuffer[pair->m_contactCount];
+		pair->m_contactCount = pair->m_contactCount + dgInt16 (CalculateConvexToNonConvexContacts (proxy));
 		if (pair->m_contactCount > (DG_MAX_CONTATCS - 2 * (DG_CONSTRAINT_MAX_ROWS / 3))) {
 			pair->m_contactCount = dgInt16 (ReduceContacts (pair->m_contactCount, pair->m_contactBuffer, DG_CONSTRAINT_MAX_ROWS / 3, DG_REDUCE_CONTACT_TOLERANCE));
 		}
-//		pair->m_isTrigger = proxi.m_inTriggerVolume;
+//		pair->m_isTrigger = proxy.m_inTriggerVolume;
 	}
 }
 
-void dgWorld::SceneContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+void dgWorld::SceneContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
 {
-	dgInt32 contactCount;
-	dgContact* constraint;
-	dgCollisionScene* scene;
-
-	contactCount = 0;
-	constraint = pair->m_contact;
+	dgContact* const constraint = pair->m_contact;
 
 	pair->m_isTrigger = 0;
 	pair->m_contactCount = 0;
 	
-	proxi.m_isTriggerVolume = 0;
-	proxi.m_inTriggerVolume = 0;
-//	proxi.m_contacts = contacts;
+	proxy.m_isTriggerVolume = 0;
+	proxy.m_inTriggerVolume = 0;
+//	proxy.m_contacts = contacts;
 
 //	_ASSERTE (pair->m_body0->m_invMass.m_w != dgFloat32 (0.0f));
 //	_ASSERTE (pair->m_body1->m_invMass.m_w == dgFloat32 (0.0f));
 	if (constraint) {
-		dgInt32 contactCount;
-		contactCount = ValidateContactCache (pair->m_body0, pair->m_body1, constraint);
+		dgInt32 contactCount = ValidateContactCache (pair->m_body0, pair->m_body1, constraint);
 		if (contactCount) {
 			pair->m_contactCount = 0;
 			pair->m_contactBuffer = NULL;
@@ -1720,16 +1706,16 @@ void dgWorld::SceneContacts (dgCollidingPairCollector::dgPair* const pair, dgCol
 		}
 	}
 
-	scene = (dgCollisionScene*) pair->m_body1->GetCollision();
+	dgCollisionScene* const scene = (dgCollisionScene*) pair->m_body1->GetCollision();
 	_ASSERTE (scene->IsType(dgCollision::dgCollisionScene_RTTI));
 	if (pair->m_body0->GetCollision()->IsType (dgCollision::dgConvexCollision_RTTI)) {
-		proxi.m_referenceBody = pair->m_body0;
-		proxi.m_floatingBody = pair->m_body1;
-		proxi.m_referenceCollision = pair->m_body0->m_collision;
-		proxi.m_floatingCollision = NULL;
-		proxi.m_referenceMatrix = pair->m_body0->m_collisionWorldMatrix ;
+		proxy.m_referenceBody = pair->m_body0;
+		proxy.m_floatingBody = pair->m_body1;
+		proxy.m_referenceCollision = pair->m_body0->m_collision;
+		proxy.m_floatingCollision = NULL;
+		proxy.m_referenceMatrix = pair->m_body0->m_collisionWorldMatrix ;
 
-		scene->CollidePair (pair, proxi);
+		scene->CollidePair (pair, proxy);
 		if (pair->m_contactCount) {
 			// prune close contacts
 			pair->m_contactCount = dgInt16 (PruneContacts (pair->m_contactCount, pair->m_contactBuffer));
@@ -1741,27 +1727,21 @@ void dgWorld::SceneContacts (dgCollidingPairCollector::dgPair* const pair, dgCol
 }
 
 
-void dgWorld::SceneContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+void dgWorld::SceneContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
 {
-	dgInt32 contactCount;
-	dgContact* constraint;
-	dgCollisionScene* scene;
-
-	contactCount = 0;
-	constraint = pair->m_contact;
+	dgContact* const constraint = pair->m_contact;
 
 	pair->m_isTrigger = 0;
 	pair->m_contactCount = 0;
 	
-	proxi.m_isTriggerVolume = 0;
-	proxi.m_inTriggerVolume = 0;
-//	proxi.m_contacts = contacts;
+	proxy.m_isTriggerVolume = 0;
+	proxy.m_inTriggerVolume = 0;
+//	proxy.m_contacts = contacts;
 
 //	_ASSERTE (pair->m_body0->m_invMass.m_w != dgFloat32 (0.0f));
 //	_ASSERTE (pair->m_body1->m_invMass.m_w == dgFloat32 (0.0f));
 	if (constraint) {
-		dgInt32 contactCount;
-		contactCount = ValidateContactCache (pair->m_body0, pair->m_body1, constraint);
+		dgInt32 contactCount = ValidateContactCache (pair->m_body0, pair->m_body1, constraint);
 		if (contactCount) {
 			pair->m_contactCount = 0;
 			pair->m_contactBuffer = NULL;
@@ -1769,16 +1749,16 @@ void dgWorld::SceneContactsSimd (dgCollidingPairCollector::dgPair* const pair, d
 		}
 	}
 
-	scene = (dgCollisionScene*) pair->m_body1->GetCollision();
+	dgCollisionScene* const scene = (dgCollisionScene*) pair->m_body1->GetCollision();
 	_ASSERTE (scene->IsType(dgCollision::dgCollisionScene_RTTI));
 	if (pair->m_body0->GetCollision()->IsType (dgCollision::dgConvexCollision_RTTI)) {
-		proxi.m_referenceBody = pair->m_body0;
-		proxi.m_floatingBody = pair->m_body1;
-		proxi.m_referenceCollision = pair->m_body0->m_collision;
-		proxi.m_floatingCollision = NULL;
-		proxi.m_referenceMatrix = pair->m_body0->m_collisionWorldMatrix ;
+		proxy.m_referenceBody = pair->m_body0;
+		proxy.m_floatingBody = pair->m_body1;
+		proxy.m_referenceCollision = pair->m_body0->m_collision;
+		proxy.m_floatingCollision = NULL;
+		proxy.m_referenceMatrix = pair->m_body0->m_collisionWorldMatrix ;
 
-		scene->CollidePairSimd (pair, proxi);
+		scene->CollidePairSimd (pair, proxy);
 
 		if (pair->m_contactCount) {
 			// prune close contacts
@@ -1797,72 +1777,72 @@ void dgWorld::CalculateContactsSimd (dgCollidingPairCollector::dgPair* const pai
 	dgBody* body1;
 	const dgContactMaterial* material;
 
-	dgCollisionParamProxi proxi(threadIndex);
+	dgCollisionParamProxy proxy(threadIndex);
 
 	body0 = pair->m_body0;
 	body1 = pair->m_body1;
 
 	material = pair->m_material;
-	proxi.m_timestep = timestep;
-	proxi.m_unconditionalCast = 0;
-	proxi.m_maxContacts = DG_MAX_CONTATCS;
-	proxi.m_penetrationPadding = material->m_penetrationPadding;
-//	proxi.m_continueCollision = material->m_collisionContinueCollisionEnable & (body0->m_continueCollisionMode | body1->m_continueCollisionMode);
-	proxi.m_continueCollision = dgInt32 (((material->m_flags & dgContactMaterial::m_collisionContinueCollisionEnable__) ? 1 : 0) & (body0->m_continueCollisionMode | body1->m_continueCollisionMode));
-	proxi.m_isTriggerVolume = body0->m_collision->IsTriggerVolume() | body1->m_collision->IsTriggerVolume();
+	proxy.m_timestep = timestep;
+	proxy.m_unconditionalCast = 0;
+	proxy.m_maxContacts = DG_MAX_CONTATCS;
+	proxy.m_penetrationPadding = material->m_penetrationPadding;
+//	proxy.m_continueCollision = material->m_collisionContinueCollisionEnable & (body0->m_continueCollisionMode | body1->m_continueCollisionMode);
+	proxy.m_continueCollision = dgInt32 (((material->m_flags & dgContactMaterial::m_collisionContinueCollisionEnable__) ? 1 : 0) & (body0->m_continueCollisionMode | body1->m_continueCollisionMode));
+	proxy.m_isTriggerVolume = body0->m_collision->IsTriggerVolume() | body1->m_collision->IsTriggerVolume();
 
 
 	if (body0->m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
 		Swap(pair->m_body0, pair->m_body1);
-		SceneContactsSimd (pair, proxi);
+		SceneContactsSimd (pair, proxy);
 	} else if (body1->m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
-		SceneContactsSimd (pair, proxi);
+		SceneContactsSimd (pair, proxy);
 	} else if (body0->m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
-		CompoundContactsSimd (pair, proxi);
+		CompoundContactsSimd (pair, proxy);
 	} else if (body1->m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
 		Swap(pair->m_body0, pair->m_body1);
-		CompoundContactsSimd (pair, proxi);
+		CompoundContactsSimd (pair, proxy);
 	} else if (body0->m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
-		ConvexContactsSimd (pair, proxi);
+		ConvexContactsSimd (pair, proxy);
 	} else if (body1->m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
 		Swap(pair->m_body0, pair->m_body1);
-		ConvexContactsSimd (pair, proxi);
+		ConvexContactsSimd (pair, proxy);
 	}
 }
 
 
 void dgWorld::CalculateContacts (dgCollidingPairCollector::dgPair* const pair, dgFloat32 timestep, dgInt32 threadIndex)
 {
-	dgCollisionParamProxi proxi(threadIndex);
+	dgCollisionParamProxy proxy(threadIndex);
 
 	dgBody* const body0 = pair->m_body0;
 	dgBody* const body1 = pair->m_body1;
 
 	const dgContactMaterial* const material = pair->m_material;
-	proxi.m_timestep = timestep;
-	proxi.m_unconditionalCast = 0;
-	proxi.m_maxContacts = DG_MAX_CONTATCS;
-	proxi.m_penetrationPadding = material->m_penetrationPadding;
-	proxi.m_isTriggerVolume = body0->m_collision->IsTriggerVolume() | body1->m_collision->IsTriggerVolume();
-//	proxi.m_continueCollision = material->m_collisionContinueCollisionEnable & (body0->m_continueCollisionMode | body1->m_continueCollisionMode);
-	proxi.m_continueCollision = dgInt32 (((material->m_flags & dgContactMaterial::m_collisionContinueCollisionEnable__) ? 1 : 0) & (body0->m_continueCollisionMode | body1->m_continueCollisionMode));
+	proxy.m_timestep = timestep;
+	proxy.m_unconditionalCast = 0;
+	proxy.m_maxContacts = DG_MAX_CONTATCS;
+	proxy.m_penetrationPadding = material->m_penetrationPadding;
+	proxy.m_isTriggerVolume = body0->m_collision->IsTriggerVolume() | body1->m_collision->IsTriggerVolume();
+//	proxy.m_continueCollision = material->m_collisionContinueCollisionEnable & (body0->m_continueCollisionMode | body1->m_continueCollisionMode);
+	proxy.m_continueCollision = dgInt32 (((material->m_flags & dgContactMaterial::m_collisionContinueCollisionEnable__) ? 1 : 0) & (body0->m_continueCollisionMode | body1->m_continueCollisionMode));
 
 
 	if (body0->m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
 		Swap(pair->m_body0, pair->m_body1);
-		SceneContacts (pair, proxi);
+		SceneContacts (pair, proxy);
 	} else if (body1->m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
-		SceneContacts (pair, proxi);
+		SceneContacts (pair, proxy);
 	}else if (body0->m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
-		CompoundContacts (pair, proxi);
+		CompoundContacts (pair, proxy);
 	} else if (body1->m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
 		Swap(pair->m_body0, pair->m_body1);
-		CompoundContacts (pair, proxi);
+		CompoundContacts (pair, proxy);
 	} else if (body0->m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
-		ConvexContacts (pair, proxi);
+		ConvexContacts (pair, proxy);
 	} else if (body1->m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
 		Swap(pair->m_body0, pair->m_body1);
-		ConvexContacts (pair, proxi);
+		ConvexContacts (pair, proxy);
 	}
 }
 
@@ -1925,14 +1905,14 @@ dgInt32 dgWorld::CollideContinueSimd (
 	collideBodyB.m_invMass = dgVector (dgFloat32 (1.0f), dgFloat32 (1.0f), dgFloat32 (1.0f), dgFloat32 (1.0f));
 	collideBodyB.UpdateCollisionMatrixSimd(dgFloat32 (1.0f), 0);
 
-	dgCollisionParamProxi proxi(threadIndex);
-	proxi.m_timestep = dgFloat32 (1.0f);
-	proxi.m_unconditionalCast = 1;
-	proxi.m_penetrationPadding = 0.0f;
-	proxi.m_continueCollision = 1;
-//	proxi.m_maxContacts = DG_MAX_CONTATCS;
-	proxi.m_maxContacts = maxSize;
-	proxi.m_isTriggerVolume = 0;
+	dgCollisionParamProxy proxy(threadIndex);
+	proxy.m_timestep = dgFloat32 (1.0f);
+	proxy.m_unconditionalCast = 1;
+	proxy.m_penetrationPadding = 0.0f;
+	proxy.m_continueCollision = 1;
+//	proxy.m_maxContacts = DG_MAX_CONTATCS;
+	proxy.m_maxContacts = maxSize;
+	proxy.m_isTriggerVolume = 0;
 
 
 	dgCollidingPairCollector::dgPair pair;
@@ -1948,32 +1928,32 @@ dgInt32 dgWorld::CollideContinueSimd (
 	if (collideBodyA.m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
 		swapContactScale = dgFloat32 (-1.0f);
 		Swap(pair.m_body0, pair.m_body1);
-		SceneContactsSimd (&pair, proxi);
+		SceneContactsSimd (&pair, proxy);
 	} else if (collideBodyB.m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
-		SceneContactsSimd (&pair, proxi);
+		SceneContactsSimd (&pair, proxy);
 
 	} else if (collideBodyA.m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
-		CompoundContactsSimd (&pair, proxi);
+		CompoundContactsSimd (&pair, proxy);
 	} else if (collideBodyB.m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
 		swapContactScale = dgFloat32 (-1.0f);
 		Swap(pair.m_body0, pair.m_body1);
-		CompoundContactsSimd (&pair, proxi);
+		CompoundContactsSimd (&pair, proxy);
 
 	} else if (collideBodyA.m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
-		ConvexContactsSimd (&pair, proxi);
+		ConvexContactsSimd (&pair, proxy);
 	} else if (collideBodyB.m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
 		swapContactScale = dgFloat32 (-1.0f);
 		Swap(pair.m_body0, pair.m_body1);
-		ConvexContactsSimd (&pair, proxi);
+		ConvexContactsSimd (&pair, proxy);
 	}
 	count = pair.m_contactCount;
 
-	if (proxi.m_timestep < dgFloat32 (1.0f)) {
-		retTimeStep = proxi.m_timestep;
+	if (proxy.m_timestep < dgFloat32 (1.0f)) {
+		retTimeStep = proxy.m_timestep;
 	}
 
 	if (count) {
-		retTimeStep = proxi.m_timestep;
+		retTimeStep = proxy.m_timestep;
 		if (count > maxSize) {
 			count = PruneContacts (count, contacts, maxSize);
 		}
@@ -2046,14 +2026,14 @@ dgInt32 dgWorld::CollideContinue (
 	collideBodyB.m_invMass = dgVector (dgFloat32 (1.0f), dgFloat32 (1.0f), dgFloat32 (1.0f), dgFloat32 (1.0f));
 	collideBodyB.UpdateCollisionMatrix(dgFloat32 (1.0f), 0);
 
-	dgCollisionParamProxi proxi(threadIndex);
-	proxi.m_timestep = dgFloat32 (1.0f);
-	proxi.m_unconditionalCast = 1;
-	proxi.m_penetrationPadding = 0.0f;
-	proxi.m_continueCollision = 1;
-//	proxi.m_maxContacts = DG_MAX_CONTATCS;
-	proxi.m_maxContacts = maxSize;
-	proxi.m_isTriggerVolume = 0;
+	dgCollisionParamProxy proxy(threadIndex);
+	proxy.m_timestep = dgFloat32 (1.0f);
+	proxy.m_unconditionalCast = 1;
+	proxy.m_penetrationPadding = 0.0f;
+	proxy.m_continueCollision = 1;
+//	proxy.m_maxContacts = DG_MAX_CONTATCS;
+	proxy.m_maxContacts = maxSize;
+	proxy.m_isTriggerVolume = 0;
 
 	dgCollidingPairCollector::dgPair pair;
 	pair.m_body0 = &collideBodyA;
@@ -2067,28 +2047,28 @@ dgInt32 dgWorld::CollideContinue (
 	if (collideBodyA.m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
 		swapContactScale = dgFloat32 (-1.0f);
 		Swap(pair.m_body0, pair.m_body1);
-		SceneContactsSimd (&pair, proxi);
+		SceneContactsSimd (&pair, proxy);
 	} else if (collideBodyB.m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
-		SceneContactsSimd (&pair, proxi);
+		SceneContactsSimd (&pair, proxy);
 
 	} else if (collideBodyA.m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
-		CompoundContacts (&pair, proxi);
+		CompoundContacts (&pair, proxy);
 	} else if (collideBodyB.m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
 		swapContactScale = dgFloat32 (-1.0f);
 		Swap(pair.m_body0, pair.m_body1);
-		CompoundContacts (&pair, proxi);
+		CompoundContacts (&pair, proxy);
 
 	} else if (collideBodyA.m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
-		ConvexContacts (&pair, proxi);
+		ConvexContacts (&pair, proxy);
 	} else if (collideBodyB.m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
 		swapContactScale = dgFloat32 (-1.0f);
 		Swap(pair.m_body0, pair.m_body1);
-		ConvexContacts (&pair, proxi);
+		ConvexContacts (&pair, proxy);
 	}
 	count = pair.m_contactCount;
 
-	if (proxi.m_timestep < dgFloat32 (1.0f)) {
-		retTimeStep = proxi.m_timestep;
+	if (proxy.m_timestep < dgFloat32 (1.0f)) {
+		retTimeStep = proxy.m_timestep;
 	}
 
 	if (count) {
@@ -2154,13 +2134,13 @@ dgInt32 dgWorld::Collide (
 	isTriggerA = collisionA->IsTriggerVolume();
 	isTriggerB = collisionB->IsTriggerVolume();
 
-	dgCollisionParamProxi proxi(threadIndex);
-	proxi.m_timestep = dgFloat32 (0.0f);
-	proxi.m_unconditionalCast = 1;
-	proxi.m_penetrationPadding = 0.0f;
-	proxi.m_continueCollision = 0;
-	proxi.m_maxContacts = maxSize;
-	proxi.m_isTriggerVolume = 0;
+	dgCollisionParamProxy proxy(threadIndex);
+	proxy.m_timestep = dgFloat32 (0.0f);
+	proxy.m_unconditionalCast = 1;
+	proxy.m_penetrationPadding = 0.0f;
+	proxy.m_continueCollision = 0;
+	proxy.m_maxContacts = maxSize;
+	proxy.m_isTriggerVolume = 0;
 
 	dgCollidingPairCollector::dgPair pair;
 	pair.m_body0 = &collideBodyA;
@@ -2174,23 +2154,23 @@ dgInt32 dgWorld::Collide (
 	if (collideBodyA.m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
 		swapContactScale = dgFloat32 (-1.0f);
 		Swap(pair.m_body0, pair.m_body1);
-		SceneContacts (&pair, proxi);
+		SceneContacts (&pair, proxy);
 	} else if (collideBodyB.m_collision->IsType (dgCollision::dgCollisionScene_RTTI)) {
-		SceneContacts (&pair, proxi);
+		SceneContacts (&pair, proxy);
 
 	} else if (collideBodyA.m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
-		CompoundContacts (&pair, proxi);
+		CompoundContacts (&pair, proxy);
 	} else if (collideBodyB.m_collision->IsType (dgCollision::dgCollisionCompound_RTTI)) {
 		swapContactScale = dgFloat32 (-1.0f);
 		Swap(pair.m_body0, pair.m_body1);
-		CompoundContacts (&pair, proxi);
+		CompoundContacts (&pair, proxy);
 
 	} else if (collideBodyA.m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
-		ConvexContacts (&pair, proxi);
+		ConvexContacts (&pair, proxy);
 	} else if (collideBodyB.m_collision->IsType (dgCollision::dgConvexCollision_RTTI)) {
 		swapContactScale = dgFloat32 (-1.0f);
 		Swap(pair.m_body0, pair.m_body1);
-		ConvexContacts (&pair, proxi);
+		ConvexContacts (&pair, proxy);
 	}
 
 	count = pair.m_contactCount;

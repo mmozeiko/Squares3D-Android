@@ -167,16 +167,9 @@ DG_INLINE dgInt32 dgOverlapTest (const dgVector& p0, const dgVector& p1, const d
 DG_INLINE dgInt32 dgOverlapTestSimd (const dgVector& p0, const dgVector& p1, const dgVector& q0, const dgVector& q1)
 {
 #ifdef DG_BUILD_SIMD_CODE
-	
-//	simd_type test;
-
 	simd_type test = simd_and_v (simd_cmplt_v ((simd_type&)p0, (simd_type&) q1), simd_cmpgt_v ((simd_type&)p1, (simd_type&) q0));
-	test = simd_and_v (test, simd_permut_v (test, test, PURMUT_MASK (3, 2, 2, 0)));
-
-//	dgFloatSign out;
-//	simd_store_s(simd_and_v (test, simd_permut_v (test, test, PURMUT_MASK (3, 2, 1, 1))), &out.m_fVal);
-//	return out.m_integer.m_iVal;
-	return simd_store_is(simd_and_v (test, simd_permut_v (test, test, PURMUT_MASK (3, 2, 1, 1))));
+	dgInt32 ret = _mm_movemask_ps(test);
+	return ((ret & 0x07) == 0x07);
 
 #else
 	return 0;

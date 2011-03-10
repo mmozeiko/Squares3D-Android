@@ -132,12 +132,12 @@ class dgCollisionCompound: public dgCollision
 
 
 	
-	dgInt32 CalculateContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi, dgInt32 useSimd) const;
-	dgInt32 CalculateContactsToSingle (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi, dgInt32 useSimd) const;
-	dgInt32 CalculateContactsToCompound (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi, dgInt32 useSimd) const;
-	dgInt32 CalculateContactsToCollisionTree (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi, dgInt32 useSimd) const;
-	dgInt32 CalculateContactsToHightField (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi, dgInt32 useSimd) const;
-	dgInt32 CalculateContactsBruteForce (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi, dgInt32 useSimd) const;
+	dgInt32 CalculateContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy, dgInt32 useSimd) const;
+	dgInt32 CalculateContactsToSingle (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy, dgInt32 useSimd) const;
+	dgInt32 CalculateContactsToCompound (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy, dgInt32 useSimd) const;
+	dgInt32 CalculateContactsToCollisionTree (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy, dgInt32 useSimd) const;
+	dgInt32 CalculateContactsToHightField (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy, dgInt32 useSimd) const;
+	dgInt32 CalculateContactsBruteForce (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy, dgInt32 useSimd) const;
 
 
 	dgInt32 ClosestDitance (dgBody* const bodyA, dgTriplex& contactA, dgBody* const bodyB, dgTriplex& contactB, dgTriplex& normalAB) const;

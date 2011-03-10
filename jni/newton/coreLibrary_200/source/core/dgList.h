@@ -40,7 +40,7 @@ class dgList
 		dgListNode (dgListNode* const prev, dgListNode* const next) 
 			:m_info () 
 		{
-			_ASSERTE ((dgUnsigned64 (&m_info) & 0x0f) == 0);
+//			_ASSERTE ((dgUnsigned64 (&m_info) & 0x0f) == 0);
 			m_prev = prev;
 			m_next = next;
 			if (m_prev) {
@@ -54,7 +54,7 @@ class dgList
 		dgListNode (const T &info, dgListNode* const prev, dgListNode* const next) 
 			:m_info (info) 
 		{
-			_ASSERTE ((dgUnsigned64 (&m_info) & 0x0f) == 0);
+//			_ASSERTE ((dgUnsigned64 (&m_info) & 0x0f) == 0);
 			m_prev = prev;
 			m_next = next;
 			if (m_prev) {
@@ -65,7 +65,7 @@ class dgList
 			}
 		}
 
-		~dgListNode()
+		virtual ~dgListNode()
 		{
 //			Unlink ();
 		}
@@ -216,7 +216,7 @@ class dgList
 
 //	dgList ();
 	dgList (dgMemoryAllocator* const allocator);
-	~dgList ();
+	virtual ~dgList ();
 
 	dgMemoryAllocator* GetAllocator () const;
 	void SetAllocator (dgMemoryAllocator* const allocator);

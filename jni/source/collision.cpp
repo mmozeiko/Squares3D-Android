@@ -463,7 +463,7 @@ CollisionTree::CollisionTree(const XMLnode& node, Level* level) : Collision(node
         NewtonTreeCollisionAddFace(collision, 4, face.v, sizeof(Face), prop);
         std::swap(m_faces[i+2], m_faces[i+3]);
     }
-    NewtonTreeCollisionEndBuild(collision, 0);
+    NewtonTreeCollisionEndBuild(collision, 1);
     
     create(collision);
 }
@@ -752,7 +752,7 @@ CollisionHMap::CollisionHMap(const XMLnode& node, Level* level) : Collision(node
         }
     }
     
-    NewtonTreeCollisionEndBuild(collision, 0);
+    NewtonTreeCollisionEndBuild(collision, 1);
     
     create(collision);  
 }

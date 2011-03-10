@@ -697,7 +697,9 @@ dgInt32 dgBroadPhaseCollision::ConvexCast (
 				dgVector l1 (matrix.UntransformVector(p1));
 				info[i].m_normalOnHitPoint[0] = info[i].m_normal[0];
 			
-				dgFloat32 t = info[i].m_hitBody->m_collision->RayCast (l0, l1, contact, NULL, NULL, NULL);
+				// bug fixed by thedmd
+				//dgFloat32 t = info[i].m_hitBody->m_collision->RayCast (l0, l1, contact, NULL, NULL, NULL);
+				dgFloat32 t = info[i].m_hitBody->m_collision->RayCast (l0, l1, contact, NULL, info[i].m_hitBody, NULL);
 				if (t >= dgFloat32 (0.0f) && t <= dgFloat32 (dgFloat32(1.0f))) {
 					contact.m_normal = matrix.RotateVector (contact.m_normal);
 					info[i].m_normalOnHitPoint[0] = contact.m_normal[0]; 
@@ -992,8 +994,9 @@ void dgBroadPhaseCollision::RayCast (
 				// clip the line against the bounding box
 				if (dgRayBoxClip (p0, p1, boxP0, boxP1)) {
 					dgVector dp (p1 - p0);
-					dgFloat32 ix0 = dgFloor (p0.m_x * invScale);
-					dgFloat32 iz0 = dgFloor (p0.m_z * invScale);
+					dgInt32 ix0 = dgFastInt (p0.m_x * invScale);
+					dgInt32 iz0 = dgFastInt (p0.m_z * invScale);
+
 
 					// implement a 3ddda line algorithm 
 
@@ -1030,8 +1033,8 @@ void dgBroadPhaseCollision::RayCast (
 
 					dgFloat32 txAcc = tx;
 					dgFloat32 tzAcc = tz;
-					dgInt32 xIndex0 = dgFastInt (ix0);
-					dgInt32 zIndex0 = dgFastInt (iz0);
+					dgInt32 xIndex0 = ix0;
+					dgInt32 zIndex0 = iz0;
 
 					// for each cell touched by the line
 					do {

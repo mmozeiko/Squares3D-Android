@@ -3720,7 +3720,7 @@ void NewtonTreeCollisionEndBuild(const NewtonCollision* treeCollision, int optim
 	TRACE_FUNTION(__FUNCTION__);
 	collision = (dgCollisionBVH*) treeCollision;
 	_ASSERTE (collision->IsType (dgCollision::dgCollisionBVH_RTTI));
-	collision->EndBuild(false); //optimize);
+	collision->EndBuild(optimize);
 }
 
 
@@ -3944,18 +3944,35 @@ void NewtonSceneProxyGetMatrix (NewtonSceneProxy* const proxy, dFloat* const mat
 	offset = newtonScene->GetProxyMatrix (node);
 }
 
-void* NewtonSceneGetFirstProxy (NewtonCollision* const scene)
-{
-	dgCollisionScene* const newtonScene = (dgCollisionScene*) scene;
-	return newtonScene->GetFirstProxy();
-}
-
-void* NewtonSceneGetNextProxy (NewtonCollision* const scene, void* const proxy)
+void NewtonSceneSetProxyUserData (NewtonSceneProxy* const proxy, void* userData)
 {
 	dgList<dgCollisionScene::dgProxy*>::dgListNode* const node = (dgList<dgCollisionScene::dgProxy*>::dgListNode*) proxy;
 	dgCollisionScene* const newtonScene = node->GetInfo()->m_owner;
 
-	return newtonScene->GetNextProxy(proxy);
+	newtonScene->SetProxyUserData(node, userData);
+}
+
+void* NewtonSceneGetProxyUserData (NewtonSceneProxy* const proxy)
+{
+	dgList<dgCollisionScene::dgProxy*>::dgListNode* const node = (dgList<dgCollisionScene::dgProxy*>::dgListNode*) proxy;
+	dgCollisionScene* const newtonScene = node->GetInfo()->m_owner;
+
+	return newtonScene->GetProxyUserData(node);
+}
+
+
+NewtonSceneProxy* NewtonSceneGetFirstProxy (NewtonCollision* const scene)
+{
+	dgCollisionScene* const newtonScene = (dgCollisionScene*) scene;
+	return (NewtonSceneProxy*) newtonScene->GetFirstProxy();
+}
+
+NewtonSceneProxy* NewtonSceneGetNextProxy (NewtonCollision* const scene, NewtonSceneProxy* const proxy)
+{
+	dgList<dgCollisionScene::dgProxy*>::dgListNode* const node = (dgList<dgCollisionScene::dgProxy*>::dgListNode*) proxy;
+	dgCollisionScene* const newtonScene = node->GetInfo()->m_owner;
+
+	return (NewtonSceneProxy*) newtonScene->GetNextProxy(proxy);
 }
 
 
@@ -8211,7 +8228,12 @@ void NewtonMeshClip (const NewtonMesh* mesh, const NewtonMesh* clipper, const dF
 	((dgMeshEffect*) mesh)->ClipMesh (matrix, (dgMeshEffect*)clipper, (dgMeshEffect**) topMesh, (dgMeshEffect**) bottomMesh);
 }
 
+NewtonMesh* NewtonMeshVoronoiDecomposition (const NewtonMesh* const mesh, int pointCount, int pointStrideInBytes, const dFloat* const pointCloud, int internalMaterial)
+{
+	TRACE_FUNTION(__FUNCTION__);
 
+	return (NewtonMesh*) ((dgMeshEffect*) mesh)->CreateVoronoiPartition (pointCount, pointStrideInBytes, pointCloud, internalMaterial);
+}
 
 NewtonMesh* NewtonMeshUnion (const NewtonMesh* mesh, const NewtonMesh* clipper, const dFloat* clipperMatrix)
 {

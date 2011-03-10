@@ -147,16 +147,20 @@ dgInt32 dgCollisionBox::CalculateSignature () const
 dgVector dgCollisionBox::SupportVertexSimd (const dgVector& dir) const
 {
 #ifdef DG_BUILD_SIMD_CODE
+	#if 0
+		dgFloatSign* const ptr =  (dgFloatSign*) &dir; 
 
-	dgInt32 x;
-	dgInt32 y;
-	dgInt32 z;
-	dgFloatSign *ptr =  (dgFloatSign*) &dir; 
+		dgInt32 x = -(ptr[0].m_integer.m_iVal >> 31);
+		dgInt32 y = -(ptr[1].m_integer.m_iVal >> 31);
+		dgInt32 z = -(ptr[2].m_integer.m_iVal >> 31);
+		return dgVector (m_size[x].m_x, m_size[y].m_y, m_size[z].m_z, dgFloat32 (0.0f));
 
-	x = -(ptr[0].m_integer.m_iVal >> 31);
-	y = -(ptr[1].m_integer.m_iVal >> 31);
-	z = -(ptr[2].m_integer.m_iVal >> 31);
-	return dgVector (m_size[x].m_x, m_size[y].m_y, m_size[z].m_z, dgFloat32 (0.0f));
+	#else
+		// according to Intel in latest possessors this is better, because read after write are very, very expensive
+		return dgVector (dir.m_x < dgFloat32 (0.0f) ? m_size[1].m_x : m_size[0].m_x, 
+						 dir.m_y < dgFloat32 (0.0f) ? m_size[1].m_y : m_size[0].m_y, 
+						 dir.m_z < dgFloat32 (0.0f) ? m_size[1].m_z : m_size[0].m_z, dgFloat32 (0.0f));
+	#endif
 
 #else
 	return dgVector (dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f));
@@ -167,21 +171,19 @@ dgVector dgCollisionBox::SupportVertex (const dgVector& dir) const
 {
 	_ASSERTE (dgAbsf(dir % dir - dgFloat32 (1.0f)) < dgFloat32 (1.0e-3f));
 
-#if 1
-	dgInt32 x;
-	dgInt32 y;
-	dgInt32 z;
-	dgFloatSign *ptr =  (dgFloatSign*) &dir; 
+#if 0
+	dgFloatSign* const ptr =  (dgFloatSign*) &dir; 
 
-	x = -(ptr[0].m_integer.m_iVal >> 31);
-	y = -(ptr[1].m_integer.m_iVal >> 31);
-	z = -(ptr[2].m_integer.m_iVal >> 31);
+	dgInt32 x = -(ptr[0].m_integer.m_iVal >> 31);
+	dgInt32 y = -(ptr[1].m_integer.m_iVal >> 31);
+	dgInt32 z = -(ptr[2].m_integer.m_iVal >> 31);
 	return dgVector (m_size[x].m_x, m_size[y].m_y, m_size[z].m_z, dgFloat32 (0.0f));
 
 #else
-	return dgVector (dir.m_x < dgFloat32 (0.0f) ? -m_size[0].m_x : m_size[0].m_x, 
-					 dir.m_y < dgFloat32 (0.0f) ? -m_size[0].m_y : m_size[0].m_y, 
-					 dir.m_z < dgFloat32 (0.0f) ? -m_size[0].m_z : m_size[0].m_z, dgFloat32 (0.0f));
+	// according to Intel in latest possessors this is better, because read after write are very, very expensive
+	return dgVector (dir.m_x < dgFloat32 (0.0f) ? m_size[1].m_x : m_size[0].m_x, 
+					 dir.m_y < dgFloat32 (0.0f) ? m_size[1].m_y : m_size[0].m_y, 
+					 dir.m_z < dgFloat32 (0.0f) ? m_size[1].m_z : m_size[0].m_z, dgFloat32 (0.0f));
 #endif
 
 }

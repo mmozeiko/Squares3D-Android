@@ -178,7 +178,7 @@ dgTemplateVector<T>& dgTemplateVector<T>::operator+= (const dgTemplateVector<T> 
 	m_x += A.m_x;
 	m_y += A.m_y;
 	m_z += A.m_z;
-	_ASSERTE (dgCheckVector ((*this)));
+//	_ASSERTE (dgCheckVector ((*this)));
 	return *this;
 }
 

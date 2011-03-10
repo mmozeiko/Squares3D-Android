@@ -108,7 +108,7 @@ class dgContactPoint
 }DG_GCC_VECTOR_ALIGMENT;
 
 DG_MSC_VECTOR_ALIGMENT
-class dgCollisionParamProxi
+class dgCollisionParamProxy
 {	
 	public:
 	dgBody* m_floatingBody;
@@ -133,7 +133,7 @@ class dgCollisionParamProxi
 	dgInt32 m_inTriggerVolume : 1;
 
 
-	dgCollisionParamProxi(dgInt32 threadIndex)
+	dgCollisionParamProxy(dgInt32 threadIndex)
 	{
 		m_threadIndex = threadIndex;
 		m_polyMeshData = NULL;

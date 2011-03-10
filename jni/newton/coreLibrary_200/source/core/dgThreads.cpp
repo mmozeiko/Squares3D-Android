@@ -432,7 +432,7 @@ void dgThreads::DoWork(dgInt32 mythreadIndex)
 	#ifndef __USE_DOUBLE_PRECISION__
 		dgUnsigned32 controlWorld;
 		controlWorld = dgControlFP (0xffffffff, 0);
-		dgControlFP (_PC_24, _MCW_PC);
+		dgControlFP (_PC_53, _MCW_PC);
 	#endif
 #endif
 

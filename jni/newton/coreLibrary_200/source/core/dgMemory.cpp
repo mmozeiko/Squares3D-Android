@@ -48,6 +48,13 @@ class dgGlobalAllocator: public dgMemoryAllocator, public dgList<dgMemoryAllocat
 		free (ptr);
 	}
 
+	void operator delete (void *ptr)
+	{
+		_ASSERTE (0);
+		::delete (ptr);
+	}
+
+
 	dgInt32 GetMemoryUsed () const
 	{
 		dgInt32 mem = m_memoryUsed;

@@ -23,7 +23,7 @@
 #define __dgGeneralVector__
 
 #include "dgStdafx.h"
-
+#include "dgDebug.h"
 
 #define DG_COUNT_FLOAT_OPS
 

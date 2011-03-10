@@ -699,7 +699,7 @@ dgCollisionCompoundBreakable::dgCollisionCompoundBreakable (
 
 	memset (materialHitogram, 0, sizeof (materialHitogram));
 	memset (faceOffsetHitogram, 0, sizeof (faceOffsetHitogram));
-	memset (mainSegmenst, 0, sizeof (faceOffsetHitogram));
+	memset (mainSegmenst, 0, sizeof (mainSegmenst));
 	for (dgDebriGraph::dgListNode* node = m_conectivity.GetFirst()->GetNext(); node; node = node->GetNext()) {
 		dgDebriNodeInfo& data = node->GetInfo().m_nodeData;
 		for (dgMesh::dgListNode* meshSgement = data.m_mesh->GetFirst(); meshSgement; meshSgement = meshSgement->GetNext()) {

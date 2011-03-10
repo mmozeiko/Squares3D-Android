@@ -47,8 +47,7 @@ class dgRedBackNode
 	{
 	}
 
-//	virtual ~dgRedBackNode () 
-	~dgRedBackNode () 
+	virtual ~dgRedBackNode () 
 	{
 	}
 
@@ -97,7 +96,7 @@ class dgTree
 			dgTreeNode* parentNode)
 			:dgRedBackNode(parentNode), m_info (info), m_key (key)
 		{
-			_ASSERTE ((dgUnsigned64 (&m_info) & 0x0f) == 0);
+//			_ASSERTE ((dgUnsigned64 (&m_info) & 0x0f) == 0);
 		}
 
 		~dgTreeNode () 
@@ -241,7 +240,7 @@ class dgTree
 
 //	dgTree ();
 	dgTree (dgMemoryAllocator* const allocator);
-	~dgTree (); 
+	virtual ~dgTree (); 
 
 	dgMemoryAllocator* GetAllocator () const;
 	void SetAllocator (dgMemoryAllocator* const allocator);

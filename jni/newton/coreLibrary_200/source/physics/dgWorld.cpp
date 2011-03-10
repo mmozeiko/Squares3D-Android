@@ -591,7 +591,7 @@ void dgWorld::UpdateCollision ()
 #if (defined (_WIN_32_VER) || defined (_WIN_64_VER))
 	#ifndef __USE_DOUBLE_PRECISION__
 		dgUnsigned32 controlWorld = dgControlFP (0xffffffff, 0);
-		dgControlFP (_PC_24, _MCW_PC);
+		dgControlFP (_PC_53, _MCW_PC);
 	#endif
 #endif
 
@@ -664,7 +664,7 @@ void dgWorld::Update (dgFloat32 timestep)
 #if (defined (_WIN_32_VER) || defined (_WIN_64_VER))
 	#ifndef __USE_DOUBLE_PRECISION__
 		dgUnsigned32 controlWorld = dgControlFP (0xffffffff, 0);
-		dgControlFP (_PC_24, _MCW_PC);
+		dgControlFP (_PC_53, _MCW_PC);
 	#endif
 #endif
 

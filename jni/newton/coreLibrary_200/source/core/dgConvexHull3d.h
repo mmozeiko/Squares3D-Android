@@ -52,7 +52,7 @@ class dgConvexHull3DFace
 class dgConvexHull3d: public dgList<dgConvexHull3DFace>
 {
 	public:
-	dgConvexHull3d(dgMemoryAllocator* const allocator, const dgFloat32* const vertexCloud, dgInt32 strideInBytes, dgInt32 count, dgFloat32 distTol);
+	dgConvexHull3d(dgMemoryAllocator* const allocator, const dgFloat32* const vertexCloud, dgInt32 strideInBytes, dgInt32 count, dgFloat32 distTol, dgInt32 maxVertexCount = 0x7fffffff);
 	virtual ~dgConvexHull3d();
 
 	dgInt32 GetVertexCount() const;
@@ -67,7 +67,7 @@ class dgConvexHull3d: public dgList<dgConvexHull3DFace>
 	virtual void DeleteFace (dgListNode* const node) ;
 	virtual dgInt32 InitVertexArray(dgBigVector* const convexPoints, dgBigVector* const points, const dgFloat32* const vertexCloud, dgInt32 strideInBytes, dgInt32 count, void* const memoryPool, dgInt32 maxMemSize);
 
-	void CalculateConvexHull (dgAABBPointTree3d* vertexTree, dgBigVector* const convexPoints, dgBigVector* const points, dgInt32 count, dgFloat32 distTol);
+	void CalculateConvexHull (dgAABBPointTree3d* vertexTree, dgBigVector* const convexPoints, dgBigVector* const points, dgInt32 count, dgFloat32 distTol, dgInt32 maxVertexCount);
 	dgInt32 BuildNormalList (dgBigVector* const normalArray) const;
 	dgInt32 SupportVertex (dgAABBPointTree3d** const tree, const dgBigVector* const points, const dgBigVector& dir) const;
 	dgFloat64 TetrahedrumVolume (const dgBigVector& p0, const dgBigVector& p1, const dgBigVector& p2, const dgBigVector& p3) const;

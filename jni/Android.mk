@@ -48,7 +48,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := newton
 
 LOCAL_CFLAGS    := -ffast-math -freciprocal-math -funsafe-math-optimizations -fsingle-precision-constant -D_LINUX_VER -D_LINUX_VER_64 -D_SCALAR_ARITHMETIC_ONLY
-#-ffloat-store
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/newton/coreLibrary_200/source/core \
                     $(LOCAL_PATH)/newton/coreLibrary_200/source/physics \

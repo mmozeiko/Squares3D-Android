@@ -587,9 +587,11 @@ extern "C" {
 	NEWTON_API void NewtonSceneCollisionDestroyProxy (NewtonCollision* const scene, NewtonSceneProxy* Proxy);
 	NEWTON_API void NewtonSceneProxySetMatrix (NewtonSceneProxy* const proxy, const dFloat* matrix);
 	NEWTON_API void NewtonSceneProxyGetMatrix (NewtonSceneProxy* const proxy, dFloat* matrix);
+	NEWTON_API void NewtonSceneSetProxyUserData (NewtonSceneProxy* const proxy, void* userData);
+	NEWTON_API void* NewtonSceneGetProxyUserData (NewtonSceneProxy* const proxy);
 
-	NEWTON_API void* NewtonSceneGetFirstProxy (NewtonCollision* const scene);
-	NEWTON_API void* NewtonSceneGetNextProxy (NewtonCollision* const scene, void* const proxy);
+	NEWTON_API NewtonSceneProxy* NewtonSceneGetFirstProxy (NewtonCollision* const scene);
+	NEWTON_API NewtonSceneProxy* NewtonSceneGetNextProxy (NewtonCollision* const scene, NewtonSceneProxy* const proxy);
 	
 	NEWTON_API void NewtonSceneCollisionOptimize (NewtonCollision* scene);
 
@@ -933,7 +935,7 @@ extern "C" {
 	NEWTON_API NewtonMesh* NewtonMeshDifference (const NewtonMesh* mesh, const NewtonMesh* clipper, const dFloat* clipperMatrix);
 	NEWTON_API NewtonMesh* NewtonMeshIntersection (const NewtonMesh* mesh, const NewtonMesh* clipper, const dFloat* clipperMatrix);
 	NEWTON_API void NewtonMeshClip (const NewtonMesh* mesh, const NewtonMesh* clipper, const dFloat* clipperMatrix, NewtonMesh** topMesh, NewtonMesh** bottomMesh);
-
+	NEWTON_API NewtonMesh* NewtonMeshVoronoiDecomposition (const NewtonMesh* const mesh, int pointCount, int pointStrideInBytes, const dFloat* const pointCloud, int internalMaterial);
 
 	NEWTON_API void NewtonRemoveUnusedVertices(const NewtonMesh* mesh, int* vertexRemapTable);
 

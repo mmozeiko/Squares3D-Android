@@ -32,15 +32,6 @@ void dgApi dgRandomize (dgUnsigned32 Seed)
 
 dgUnsigned32 dgApi dgRandom()
 {
-//	__asm {
-//		mov	eax, randSeed 
-//		mov	edx, RAND_MUL	
-//		mul	edx
-//		inc	eax
-//		mov	randSeed, eax 
-//	}
-//	return randSeed;
-
 	randSeed = RAND_MUL * randSeed + 1; 
 	return randSeed;
 }

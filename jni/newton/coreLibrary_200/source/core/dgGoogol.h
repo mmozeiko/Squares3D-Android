@@ -43,6 +43,9 @@ class dgGoogol
 	dgGoogol operator- (const dgGoogol &A) const; 
 	dgGoogol operator* (const dgGoogol &A) const; 
 
+	dgGoogol operator+= (const dgGoogol &A); 
+	dgGoogol operator-= (const dgGoogol &A); 
+
 	private:
 	inline void PackFloat ();
 	inline void AddFloat (dgFloat64 A, dgFloat64 B, dgFloat64& x, dgFloat64& y) const;
@@ -57,6 +60,11 @@ class dgGoogol
 class dgHugeVector: public dgTemplateVector<dgGoogol>
 {
 	public:
+	dgHugeVector ()
+		:dgTemplateVector<dgGoogol>()
+	{
+	}
+
 	dgHugeVector (const dgBigVector& a)
 		:dgTemplateVector<dgGoogol>()
 	{

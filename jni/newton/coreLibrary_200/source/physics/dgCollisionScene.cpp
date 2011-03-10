@@ -27,6 +27,7 @@
 #include "dgCollisionScene.h"
 #include "dgCollisionNull.h"
 
+#define DG_SCENE_MAX_STACK_DEPTH  128
 #define DG_SCENE_AABB_SCALE		dgFloat32 (4.0f)
 #define DG_SCENE_AABB_INV_SCALE	(dgFloat32 (1.0f) / DG_SCENE_AABB_SCALE)
 
@@ -83,6 +84,7 @@ dgCollisionScene::dgProxy::dgProxy (dgCollision* m_shape, const dgMatrix& matrix
 	:dgNode ()
 	,m_shape (m_shape)
 	,m_owner (owner)
+	,m_userData(NULL)
 {
 	dgVector boxP0;
 	dgVector boxP1;
@@ -134,96 +136,25 @@ dgCollisionScene::dgCollisionScene (dgWorld* const world, dgDeserialize deserial
 	,m_list(world->GetAllocator())
 	,m_fitnessList(world->GetAllocator())
 {
-	_ASSERTE (0);
-/*
-	dgInt32 stack;
-	dgInt32 nodeCount;
 	dgInt32 data[4];
-	dgNode *stackPool[64];
 
 	m_world = world;
 	m_rtti |= dgCollisionScene_RTTI;
 
 	deserialization (userData, &data, sizeof (data));
-	dgStack<dgList<dgProxy>::dgListNode*> array(data[0]);
-
 	for (dgInt32 i = 0; i < data[0]; i ++) {
-		
-		dgVector p0;
-		dgVector p1;
 		dgMatrix matrix;
-		dgCollision* collision;
+		void* data;
 		deserialization (userData, &matrix, sizeof (dgMatrix));
-		deserialization (userData, &p0, sizeof (dgVector));
-		deserialization (userData, &p1, sizeof (dgVector));
-
-		collision = m_world->CreateFromSerialization (deserialization, userData);
-
-		array[i] = (dgList<dgProxy>::dgListNode*)AddProxy (collision);
-
-		dgProxy& proxy = array[i]->GetInfo();
-		proxy.m_matrix = matrix;
-		proxy.m_boxP0 = p0;
-		proxy.m_boxP1 = p1;
-
+		deserialization (userData, &data, sizeof (void*));
+		dgCollision* const collision = m_world->CreateFromSerialization (deserialization, userData);
+		dgList<dgProxy*>::dgListNode* const proxyNode = (dgList<dgProxy*>::dgListNode*) AddProxy (collision, matrix);
+		dgProxy* const proxy = proxyNode->GetInfo();
+		proxy->m_userData = data;
 		collision->Release();
 	}
 
-	m_rootNode = NULL;
-	deserialization (userData, &nodeCount, sizeof (dgInt32));
-
-	m_rootNode = new (m_allocator) dgNode;
-	m_rootNode->m_parent = NULL;
-
-	stack = 1;
-	stackPool[0] = m_rootNode;
-	while (stack) {
-		dgInt32 left;
-		dgInt32 right;
-
-		stack --;
-		dgNode* const node = stackPool[stack];
-
-		deserialization (userData, &node->m_p0, sizeof (dgVector));
-		deserialization (userData, &node->m_p1, sizeof (dgVector));
-		deserialization (userData, &left, sizeof (dgInt32));
-		deserialization (userData, &right, sizeof (dgInt32));
-
-		node->m_nodeIsDirty = false;
-		node->m_leftIsProxy = dgInt8 (left);
-		node->m_rightIsProxy = dgInt8 (right);
-
-		if (node->m_rightIsProxy) {
-			dgInt32 proxyIndex;
-			deserialization  (userData, &proxyIndex, sizeof (dgInt32));
-			node->m_rightProxi = array[proxyIndex];
-
-		} else {
-			dgNode* const child = new (m_allocator) dgNode;
-			child->m_parent = node;
-			node->m_rightNode = child;
-			_ASSERTE (node->m_rightIsProxy == false);
-			_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-			stackPool[stack] = node->m_rightNode;
-			stack++;
-		}
-
-		if (node->m_leftIsProxy) {
-			dgInt32 proxyIndex;
-			deserialization  (userData, &proxyIndex, sizeof (dgInt32));
-			node->m_leftProxi = array[proxyIndex];
-
-		} else {
-			dgNode* const child = new (m_allocator) dgNode;
-			child->m_parent = node;
-			node->m_leftNode = child;
-			_ASSERTE (node->m_leftIsProxy == false);
-			_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-			stackPool[stack] = node->m_leftNode;
-			stack++;
-		}
-	}
-*/
+	ImproveTotalFitness();
 }
 
 dgCollisionScene::~dgCollisionScene(void)
@@ -237,12 +168,7 @@ dgCollisionScene::~dgCollisionScene(void)
 
 void dgCollisionScene::Serialize(dgSerialize callback, void* const userData) const
 {
-	_ASSERTE (0);
-/*
-	dgInt32 index;
-	dgInt32 stack;
 	dgInt32 data[4];
-	dgNode *stackPool[64];
 
 	SerializeLow(callback, userData);
 
@@ -252,95 +178,13 @@ void dgCollisionScene::Serialize(dgSerialize callback, void* const userData) con
 	data[3] = 0;
 	callback (userData, &data, sizeof (data));
 
-	index = 0;
-	for (dgList<dgProxy>::dgListNode* node = m_list.GetFirst(); node; node = node->GetNext()) {
-		dgProxy& proxy = node->GetInfo();
-		proxy.m_boxP0.m_w = dgFloat32 (index); 
-		index ++;
-
-		callback (userData, &proxy.m_matrix, sizeof (dgMatrix));
-		callback (userData, &proxy.m_boxP0, sizeof (dgVector));
-		callback (userData, &proxy.m_boxP1, sizeof (dgVector));
-		m_world->Serialize (proxy.m_shape, callback, userData);
+	for (dgList<dgProxy*>::dgListNode* node = m_list.GetFirst(); node; node = node->GetNext()) {
+		dgProxy* const proxy = node->GetInfo();
+		callback (userData, &proxy->m_matrix, sizeof (dgMatrix));
+		callback (userData, &proxy->m_userData, sizeof (void*));
+		m_world->Serialize (proxy->m_shape, callback, userData);
 	}
-
-#ifdef _DEBUG
-	index = 0;
-	stack = 1;
-	stackPool[0] = m_rootNode;
-	while (stack) {
-		stack --;
-		dgNode* const node = stackPool[stack];
-		index ++;
-
-		if (node->m_rightIsProxy == false) {
-			_ASSERTE (node->m_rightNode);
-			_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-			stackPool[stack] = node->m_rightNode;
-			stack++;
-		}
-	
-		if (node->m_leftIsProxy == false) {
-			_ASSERTE (node->m_leftNode);
-			_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-			stackPool[stack] = node->m_leftNode;
-			stack++;
-		}
-	}
-	_ASSERTE (index == (m_list.GetCount() - 1));
-#endif
-
-	index = m_list.GetCount() - 1;
-	callback (userData, &index, sizeof (dgInt32));
-
-	stack = 1;
-	stackPool[0] = m_rootNode;
-	while (stack) {
-		stack --;
-		const dgNode* const node = stackPool[stack];
-
-		dgInt32 left  = node->m_leftIsProxy;
-		dgInt32 right = node->m_rightIsProxy;
-		callback (userData, &node->m_p0, sizeof (dgVector));
-		callback (userData, &node->m_p1, sizeof (dgVector));
-		callback (userData, &left, sizeof (dgInt32));
-		callback (userData, &right, sizeof (dgInt32));
-
-		if (node->m_rightIsProxy) {
-			dgInt32 proxyIndex;
-			const dgProxy& sceneProxy = node->m_rightProxi->GetInfo();
-			proxyIndex = dgInt32 (sceneProxy.m_boxP0.m_w);
-			callback (userData, &proxyIndex, sizeof (dgInt32));
-		} else {
-			_ASSERTE (node->m_rightNode);
-			_ASSERTE (node->m_rightIsProxy == false);
-			_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-			stackPool[stack] = node->m_rightNode;
-			stack++;
-		}
-
-		if (node->m_leftIsProxy) {
-			dgInt32 proxyIndex;
-			const dgProxy& sceneProxy = node->m_leftProxi->GetInfo();
-			proxyIndex = dgInt32 (sceneProxy.m_boxP0.m_w);
-			callback (userData, &proxyIndex, sizeof (dgInt32));
-
-		} else {
-			_ASSERTE (node->m_leftNode);
-			_ASSERTE (node->m_leftIsProxy == false);
-			_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-			stackPool[stack] = node->m_leftNode;
-			stack++;
-		}
-	}
-*/
 }
-
-
-
-
-
-
 
 
 void dgCollisionScene::SetProxyMatrix (void* proxy, const dgMatrix& matrix)
@@ -392,6 +236,19 @@ dgMatrix dgCollisionScene::GetProxyMatrix (void* const proxy)
 {
 	dgProxy* const entry = ((dgList<dgProxy*>::dgListNode*) proxy)->GetInfo();
 	return entry->m_shape->GetOffsetMatrix().Inverse() * entry->m_matrix;
+}
+
+
+void dgCollisionScene::SetProxyUserData (void* const proxy, void* const userData)
+{
+	dgProxy* const entry = ((dgList<dgProxy*>::dgListNode*) proxy)->GetInfo();
+	entry->m_userData = userData;
+}
+
+void* dgCollisionScene::GetProxyUserData (void* const proxy) const
+{
+	dgProxy* const entry = ((dgList<dgProxy*>::dgListNode*) proxy)->GetInfo();
+	return entry->m_userData;
 }
 
 
@@ -529,84 +386,6 @@ bool dgCollisionScene::OOBBTest (const dgMatrix& matrix, const dgCollisionConvex
 	return true;
 }
 
-
-
-dgFloat32 dgCollisionScene::RayCastSimd (const dgVector& localP0, const dgVector& localP1, dgContactPoint& contactOut, OnRayPrecastAction preFilter, const dgBody* const body, void* const userData) const
-{
-_ASSERTE (0);
-return 0;
-/*
-	dgInt32 stack;
-	dgFloat32 maxParam;
-	dgContactPoint tmpContactOut;
-	const dgNode *stackPool[64];
-
-	if (!m_rootNode) {
-		return dgFloat32 (1.2f);
-	}
-
-	
-	
-	stack = 1;
-	stackPool[0] = m_rootNode;
-	maxParam = dgFloat32 (1.2f);
-
-	FastRayTest ray (localP0, localP1);
-	while (stack) {
-		const dgNode *me;
-
-		stack --;
-		me = stackPool[stack];
-		if (ray.BoxTestSimd (me->m_p0, me->m_p1)) {
-			if (me->m_leftIsProxy) {
-				const dgProxy& proxy = me->m_leftProxi->GetInfo();
-				if (ray.BoxTestSimd (proxy.m_boxP0, proxy.m_boxP1)) {
-					dgFloat32 param;
-					dgVector l0 (proxy.m_matrix.UntransformVector (localP0));
-					dgVector l1 (proxy.m_matrix.UntransformVector (localP1));
-					param = proxy.m_shape->RayCastSimd (l0, l1, tmpContactOut, preFilter, body, userData);
-					_ASSERTE (param >= dgFloat32 (0.0f));
-					if (param < maxParam) {
-						contactOut.m_normal = proxy.m_matrix.RotateVector(tmpContactOut.m_normal);
-						maxParam = param;
-						ray.Reset (maxParam) ;
-					}
-				}
-			} else {
-				_ASSERTE (me->m_leftIsProxy == false);
-				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-				stackPool[stack] = me->m_leftNode;
-				stack++;
-			}
-
-			if (me->m_rightIsProxy) {
-				const dgProxy& proxy = me->m_rightProxi->GetInfo();
-				if (ray.BoxTestSimd (proxy.m_boxP0, proxy.m_boxP1)) {
-					dgFloat32 param;
-					dgVector l0 (proxy.m_matrix.UntransformVector (localP0));
-					dgVector l1 (proxy.m_matrix.UntransformVector (localP1));
-					param = proxy.m_shape->RayCastSimd (l0, l1, tmpContactOut, preFilter, body, userData);
-					_ASSERTE (param >= dgFloat32 (0.0f));
-					if (param < maxParam) {
-						contactOut.m_normal = proxy.m_matrix.RotateVector(tmpContactOut.m_normal);
-						maxParam = param;
-						ray.Reset (maxParam) ;
-					}
-				}
-
-			} else {
-				_ASSERTE (me->m_rightIsProxy == false);
-				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-				stackPool[stack] = me->m_rightNode;
-				stack++;
-			}
-		}
-	}
-	return maxParam;
-*/
-}
-
-
 dgVector dgCollisionScene::SupportVertex (const dgVector& dir) const
 {
 	_ASSERTE (0);
@@ -615,230 +394,184 @@ dgVector dgCollisionScene::SupportVertex (const dgVector& dir) const
 
 
 
-dgFloat32 dgCollisionScene::RayCast (const dgVector& localP0, const dgVector& localP1, dgContactPoint& contactOut, OnRayPrecastAction preFilter, const dgBody* const body, void* const userData) const
+dgFloat32 dgCollisionScene::RayCastSimd (const dgVector& localP0, const dgVector& localP1, dgContactPoint& contactOut, OnRayPrecastAction preFilter, const dgBody* const body, void* const userData) const
 {
-	_ASSERTE (0);
-	return 0;
-/*
-	dgInt32 stack;
-	dgFloat32 maxParam;
-	dgContactPoint tmpContactOut;
-	const dgNode *stackPool[64];
-
+	const dgNode *stackPool[DG_SCENE_MAX_STACK_DEPTH];
 	if (!m_rootNode) {
 		return dgFloat32 (1.2f);
 	}
 
-	stack = 1;
+	dgInt32 stack = 1;
 	stackPool[0] = m_rootNode;
-	maxParam = dgFloat32 (1.2f);
+	dgFloat32 maxParam = dgFloat32 (1.2f);
 
 	FastRayTest ray (localP0, localP1);
 	while (stack) {
-		const dgNode *me;
 		stack --;
-		me = stackPool[stack];
-		if (ray.BoxTest (me->m_p0, me->m_p1)) {
-			if (me->m_leftIsProxy) {
-				const dgProxy& proxy = me->m_leftProxi->GetInfo();
-				if (ray.BoxTest (proxy.m_boxP0, proxy.m_boxP1)) {
-					dgFloat32 param;
-					dgVector l0 (proxy.m_matrix.UntransformVector (localP0));
-					dgVector l1 (proxy.m_matrix.UntransformVector (localP1));
-					param = proxy.m_shape->RayCast (l0, l1, tmpContactOut, preFilter, body, userData);
-					_ASSERTE (param >= dgFloat32 (0.0f));
-					if (param < maxParam) {
-						contactOut.m_normal = proxy.m_matrix.RotateVector(tmpContactOut.m_normal);
-						maxParam = param;
-						ray.Reset (maxParam);
-					}
+		const dgNode* const me = stackPool[stack];
+
+		if (ray.BoxTestSimd (me->m_minBox, me->m_maxBox)) {
+			if (!me->m_left) {
+				_ASSERTE (!me->m_right);
+				dgContactPoint tmpContactOut;
+				const dgProxy* const proxy = (dgProxy*) me;
+				dgVector l0 (proxy->m_matrix.UntransformVector (localP0));
+				dgVector l1 (proxy->m_matrix.UntransformVector (localP1));
+				dgFloat32 param = proxy->m_shape->RayCastSimd (l0, l1, tmpContactOut, preFilter, body, userData);
+				_ASSERTE (param >= dgFloat32 (0.0f));
+				if (param < maxParam) {
+					contactOut.m_normal = proxy->m_matrix.RotateVectorSimd(tmpContactOut.m_normal);
+					maxParam = param;
+					ray.Reset (maxParam);
 				}
 			} else {
-				_ASSERTE (me->m_leftNode);
+				_ASSERTE (me->m_left);
 				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-				stackPool[stack] = me->m_leftNode;
+				stackPool[stack] = me->m_left;
 				stack++;
-			}
 
-			if (me->m_rightIsProxy) {
-				const dgProxy& proxy = me->m_rightProxi->GetInfo();
-				if (ray.BoxTest (proxy.m_boxP0, proxy.m_boxP1)) {
-					dgFloat32 param;
-					dgVector l0 (proxy.m_matrix.UntransformVector (localP0));
-					dgVector l1 (proxy.m_matrix.UntransformVector (localP1));
-					param = proxy.m_shape->RayCast (l0, l1, tmpContactOut, preFilter, body, userData);
-					_ASSERTE (param >= dgFloat32 (0.0f));
-					if (param < maxParam) {
-						contactOut.m_normal = proxy.m_matrix.RotateVector(tmpContactOut.m_normal);
-						maxParam = param;
-						ray.Reset (maxParam) ;
-					}
-				}
-
-			} else {
-				_ASSERTE (me->m_rightNode);
+				_ASSERTE (me->m_right);
 				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-				stackPool[stack] = me->m_rightNode;
+				stackPool[stack] = me->m_right;
 				stack++;
 			}
 		}
 	}
 	return maxParam;
-*/
+
 }
 
-void dgCollisionScene::CollidePairSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+
+
+
+dgFloat32 dgCollisionScene::RayCast (const dgVector& localP0, const dgVector& localP1, dgContactPoint& contactOut, OnRayPrecastAction preFilter, const dgBody* const body, void* const userData) const
 {
-_ASSERTE (0);
-/*
-	dgInt32 stack;
-	dgWorld* world;
-	const dgNode *stackPool[64];
+	const dgNode *stackPool[DG_SCENE_MAX_STACK_DEPTH];
+
+	if (!m_rootNode) {
+		return dgFloat32 (1.2f);
+	}
+
+	dgInt32 stack = 1;
+	stackPool[0] = m_rootNode;
+	dgFloat32 maxParam = dgFloat32 (1.2f);
+
+//int xxx = 0;
+	FastRayTest ray (localP0, localP1);
+	while (stack) {
+		stack --;
+		const dgNode* const me = stackPool[stack];
+
+//xxx ++;
+		if (ray.BoxTest (me->m_minBox, me->m_maxBox)) {
+			if (!me->m_left) {
+				_ASSERTE (!me->m_right);
+				dgContactPoint tmpContactOut;
+				const dgProxy* const proxy = (dgProxy*) me;
+				dgVector l0 (proxy->m_matrix.UntransformVector (localP0));
+				dgVector l1 (proxy->m_matrix.UntransformVector (localP1));
+				dgFloat32 param = proxy->m_shape->RayCast (l0, l1, tmpContactOut, preFilter, body, userData);
+				_ASSERTE (param >= dgFloat32 (0.0f));
+				if (param < maxParam) {
+					contactOut.m_normal = proxy->m_matrix.RotateVector(tmpContactOut.m_normal);
+					maxParam = param;
+					ray.Reset (maxParam);
+				}
+			} else {
+				_ASSERTE (me->m_left);
+				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
+				stackPool[stack] = me->m_left;
+				stack++;
+
+				_ASSERTE (me->m_right);
+				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
+				stackPool[stack] = me->m_right;
+				stack++;
+			}
+		}
+	}
+	return maxParam;
+}
+
+void dgCollisionScene::CollidePairSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
+{
+	const dgNode *stackPool[DG_SCENE_MAX_STACK_DEPTH];
 
 	_ASSERTE (pair->m_body1->GetCollision() == this);
 	_ASSERTE (pair->m_body1->GetCollision()->IsType(dgCollision::dgCollisionScene_RTTI));
 
 	dgVector p0;
 	dgVector p1;
-
-	world = pair->m_body1->GetWorld();
+	_ASSERTE (m_world == pair->m_body1->GetWorld());
 	dgMatrix matrix (pair->m_body0->m_matrix * pair->m_body1->m_matrix.Inverse());
-	pair->m_body0->GetCollision()->CalcAABB (matrix, p0, p1);
+	pair->m_body0->GetCollision()->CalcAABBSimd (matrix, p0, p1);
 
-	stack = 0;
-	if (m_rootNode->m_leftIsProxy) {
-		const dgProxy& sceneProxy = m_rootNode->m_leftProxi->GetInfo();
-		if (!sceneProxy.m_shape->IsType (dgCollision::dgCollisionNull_RTTI)) {
-			if (dgOverlapTestSimd (sceneProxy.m_boxP0, sceneProxy.m_boxP1, p0, p1)) {
-				world->SceneContactsSimd (sceneProxy, pair, proxi);
-			}
-		}
-	} else if (m_rootNode->m_leftNode) {
-		stackPool[stack] = m_rootNode->m_leftNode;
-		stack++;
-	}
-
-	if (m_rootNode->m_rightIsProxy) {
-		const dgProxy& sceneProxy = m_rootNode->m_rightProxi->GetInfo();
-		if (!sceneProxy.m_shape->IsType (dgCollision::dgCollisionNull_RTTI)) {
-			if (dgOverlapTestSimd (sceneProxy.m_boxP0, sceneProxy.m_boxP1, p0, p1)) {
-				world->SceneContactsSimd (sceneProxy, pair, proxi);
-			}
-		}
-	} else {
-		_ASSERTE (m_rootNode->m_rightNode);
-		stackPool[stack] = m_rootNode->m_rightNode;
-		stack++;
-	}
-
+	dgInt32 stack = 1;
+	stackPool[0] = m_rootNode;
 	while (stack) {
-
 		stack --;
 		const dgNode* const me = stackPool[stack];
-		if (dgOverlapTestSimd (me->m_p0, me->m_p1, p0, p1)) {
-			if (me->m_leftIsProxy) {
-				const dgProxy& sceneProxy = me->m_leftProxi->GetInfo();
-				if (dgOverlapTestSimd (sceneProxy.m_boxP0, sceneProxy.m_boxP1, p0, p1)) {
-					world->SceneContactsSimd (sceneProxy, pair, proxi);
-				}
-			} else {
-				_ASSERTE (me->m_leftNode);
-				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-				stackPool[stack] = me->m_leftNode;
-				stack++;
-			}
 
-			if (me->m_rightIsProxy) {
-				const dgProxy& sceneProxy = me->m_rightProxi->GetInfo();
-				if (dgOverlapTestSimd (sceneProxy.m_boxP0, sceneProxy.m_boxP1, p0, p1)) {
-					world->SceneContactsSimd (sceneProxy, pair, proxi);
-				}
+		if (dgOverlapTestSimd (me->m_minBox, me->m_maxBox, p0, p1)) {
+
+			if (!me->m_left) {
+				_ASSERTE (!me->m_right);
+				const dgProxy* const sceneProxy = (dgProxy*) me;
+				m_world->SceneContactsSimd (*sceneProxy, pair, proxy);
 			} else {
-				_ASSERTE (me->m_rightNode);
+				_ASSERTE (me->m_left);
 				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-				stackPool[stack] = me->m_rightNode;
+				stackPool[stack] = me->m_left;
+				stack++;
+
+				_ASSERTE (me->m_right);
+				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
+				stackPool[stack] = me->m_right;
 				stack++;
 			}
 		}
 	}
-*/
+
 }
 
-void dgCollisionScene::CollidePair (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const
+void dgCollisionScene::CollidePair (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const
 {
-_ASSERTE (0);
-/*
-	dgInt32 stack;
-	dgWorld* world;
-	const dgNode *stackPool[64];
+	const dgNode *stackPool[DG_SCENE_MAX_STACK_DEPTH];
 
 	_ASSERTE (pair->m_body1->GetCollision() == this);
 	_ASSERTE (pair->m_body1->GetCollision()->IsType(dgCollision::dgCollisionScene_RTTI));
 
 	dgVector p0;
 	dgVector p1;
-
-	world = pair->m_body1->GetWorld();
+	_ASSERTE (m_world == pair->m_body1->GetWorld());
 	dgMatrix matrix (pair->m_body0->m_matrix * pair->m_body1->m_matrix.Inverse());
 	pair->m_body0->GetCollision()->CalcAABB (matrix, p0, p1);
 
-	stack = 0;
-	if (m_rootNode->m_leftIsProxy) {
-		const dgProxy& sceneProxy = m_rootNode->m_leftProxi->GetInfo();
-		if (!sceneProxy.m_shape->IsType (dgCollision::dgCollisionNull_RTTI)) {
-			if (dgOverlapTest (sceneProxy.m_boxP0, sceneProxy.m_boxP1, p0, p1)) {
-					world->SceneContacts (sceneProxy, pair, proxi);
-			}
-		}
-	} else if (m_rootNode->m_leftNode) {
-		stackPool[stack] = m_rootNode->m_leftNode;
-		stack++;
-	}
-
-	if (m_rootNode->m_rightIsProxy) {
-		const dgProxy& sceneProxy = m_rootNode->m_rightProxi->GetInfo();
-		if (!sceneProxy.m_shape->IsType (dgCollision::dgCollisionNull_RTTI)) {
-			if (dgOverlapTest (sceneProxy.m_boxP0, sceneProxy.m_boxP1, p0, p1)) {
-				world->SceneContacts (sceneProxy, pair, proxi);
-			}
-		}
-	} else {
-		_ASSERTE (m_rootNode->m_rightNode);
-		stackPool[stack] = m_rootNode->m_rightNode;
-		stack++;
-	}
-
+	dgInt32 stack = 1;
+	stackPool[0] = m_rootNode;
 	while (stack) {
-
 		stack --;
 		const dgNode* const me = stackPool[stack];
-		if (dgOverlapTest (me->m_p0, me->m_p1, p0, p1)) {
-			if (me->m_leftIsProxy) {
-				const dgProxy& sceneProxy = me->m_leftProxi->GetInfo();
-				if (dgOverlapTest (sceneProxy.m_boxP0, sceneProxy.m_boxP1, p0, p1)) {
-					world->SceneContacts (sceneProxy, pair, proxi);
-				}
-			} else {
-				_ASSERTE (me->m_leftNode);
-				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-				stackPool[stack] = me->m_leftNode;
-				stack++;
-			}
 
-			if (me->m_rightIsProxy) {
-				const dgProxy& sceneProxy = me->m_rightProxi->GetInfo();
-				if (dgOverlapTest (sceneProxy.m_boxP0, sceneProxy.m_boxP1, p0, p1)) {
-					world->SceneContacts (sceneProxy, pair, proxi);
-				}
+		if (dgOverlapTest (me->m_minBox, me->m_maxBox, p0, p1)) {
+
+			if (!me->m_left) {
+				_ASSERTE (!me->m_right);
+				const dgProxy* const sceneProxy = (dgProxy*) me;
+				m_world->SceneContacts (*sceneProxy, pair, proxy);
 			} else {
-				_ASSERTE (me->m_rightNode);
+				_ASSERTE (me->m_left);
 				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
-				stackPool[stack] = me->m_rightNode;
+				stackPool[stack] = me->m_left;
+				stack++;
+
+				_ASSERTE (me->m_right);
+				_ASSERTE (stack < sizeof (stackPool) / sizeof (dgNode*));
+				stackPool[stack] = me->m_right;
 				stack++;
 			}
 		}
 	}
-*/
 }
 
 
@@ -999,6 +732,8 @@ void dgCollisionScene::ImproveTotalFitness()
 		}
 		maxPasses --;
 	} while (maxPasses && (newCost < prevCost));
+
+	SetCollisionBBox (m_rootNode->m_minBox, m_rootNode->m_maxBox);
 }
 
 dgFloat32 dgCollisionScene::CalculateSurfaceArea (const dgNode* const node0, const dgNode* const node1, dgVector& minBox, dgVector& maxBox) const

@@ -75,6 +75,8 @@ class dgConvexHull4dTetraherum
 	dgTetrahedrumPlane GetPlaneEquation (const dgHullVector* const points) const;
 	dgFloat64 Evalue (const dgHullVector* const pointArray, const dgBigVector& point) const;
 
+	dgBigVector CircumSphereCenter (const dgHullVector* const pointArray) const;
+
 	dgInt32 GetMark() const { return m_mark; }
 	void SetMark(dgInt32 mark) { m_mark = mark; }
 	
@@ -102,7 +104,7 @@ class dgConvexHull4d: public dgList<dgConvexHull4dTetraherum>
 	dgInt32 GetVertexIndex(dgInt32 i) const;
 	const dgBigVector& GetVertex(dgInt32 i) const;
 
-	
+	const dgHullVector* GetHullVertexArray() const;
 
 	dgInt32 IncMark (); 
 
@@ -162,6 +164,11 @@ inline const dgBigVector& dgConvexHull4d::GetVertex(dgInt32 index) const
 	_ASSERTE (index < m_count);
 //	return dgVector (dgFloat32 (m_points[index].m_x), dgFloat32 (m_points[index].m_y), dgFloat32 (m_points[index].m_z), dgFloat32 (m_points[index].m_w));
 	return m_points[index];
+}
+
+inline const dgHullVector* dgConvexHull4d::GetHullVertexArray() const
+{
+	return &m_points[0];
 }
 
 #endif

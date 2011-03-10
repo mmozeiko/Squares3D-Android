@@ -187,23 +187,16 @@ void dgCollisionConvex::SetUserData (void* const userData)
 
 void dgCollisionConvex::SetVolumeAndCG ()
 {
-	dgInt32 i;
-	dgInt32 count;
-	dgFloat32 scale;
-	dgConvexSimplexEdge *edge;
-	dgConvexSimplexEdge *face;
-	dgVector inertia;
-	dgVector crossInertia;
 	dgPolyhedraMassProperties localData;
-	dgVector faceVertex[128];
+	dgVector faceVertex[512];
 	dgStack<dgInt8> edgeMarks (m_edgeCount);
 
 	memset (&edgeMarks[0], 0, sizeof (dgInt8) * m_edgeCount);
-	for (i = 0; i < m_edgeCount; i ++) {
-		face = &m_simplex[i];
+	for (dgInt32 i = 0; i < m_edgeCount; i ++) {
+		dgConvexSimplexEdge* const face = &m_simplex[i];
 		if (!edgeMarks[i]) {
-			edge = face;
-			count = 0;
+			dgConvexSimplexEdge* edge = face;
+			dgInt32 count = 0;
 			do {
 				_ASSERTE ((edge - m_simplex) >= 0);
 				edgeMarks[dgInt32 (edge - m_simplex)] = '1';
@@ -217,14 +210,16 @@ void dgCollisionConvex::SetVolumeAndCG ()
 		}
 	}
 
-	scale = localData.MassProperties (m_volume, inertia, crossInertia);
+	dgVector inertia;
+	dgVector crossInertia;
+	dgFloat32 scale = localData.MassProperties (m_volume, inertia, crossInertia);
 	m_volume = m_volume.Scale (dgFloat32 (1.0f) / GetMax (scale, dgFloat32 (1.0e-4f)));
 	m_volume.m_w = scale;
 	m_simplexVolume = m_volume.m_w;
 
 	// set the table for quick calculation of support vertex
-	count = sizeof (m_supportVertexStarCuadrant) / sizeof (m_supportVertexStarCuadrant[0]);
-	for (i = 0; i < count; i ++) {
+	dgInt32 count = sizeof (m_supportVertexStarCuadrant) / sizeof (m_supportVertexStarCuadrant[0]);
+	for (dgInt32 i = 0; i < count; i ++) {
 		m_supportVertexStarCuadrant[i] = GetSupportEdge (m_multiResDir[i]);
 	}
 	_ASSERTE (m_supportVertexStarCuadrant[4] == GetSupportEdge (m_multiResDir[0].Scale (-1.0f)));
@@ -236,7 +231,7 @@ void dgCollisionConvex::SetVolumeAndCG ()
 	// calculate the origin of the bound box of this primitive
 	dgVector p0; 
 	dgVector p1;
-	for (i = 0; i < 3; i ++) {
+	for (dgInt32 i = 0; i < 3; i ++) {
 		dgVector dir (dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f)); 
 		dir[i] = dgFloat32 (-1.0f);
 		p0[i] = SupportVertex(dir)[i];
@@ -244,8 +239,8 @@ void dgCollisionConvex::SetVolumeAndCG ()
 		dir[i] = dgFloat32 (1.0f);
 		p1[i] = SupportVertex(dir)[i];
 	}
-	p0[i] = dgFloat32 (0.0f);
-	p1[i] = dgFloat32 (0.0f);
+	p0[3] = dgFloat32 (0.0f);
+	p1[3] = dgFloat32 (0.0f);
 	m_boxSize = (p1 - p0).Scale (dgFloat32 (0.5f)); 
 	m_boxOrigin = (p1 + p0).Scale (dgFloat32 (0.5f)); 
 	m_boxMinRadius = GetMin(m_boxSize.m_x, m_boxSize.m_y, m_boxSize.m_z);
@@ -265,19 +260,14 @@ void dgCollisionConvex::SetVolumeAndCG ()
 	m_size_z.m_y = m_boxSize.m_z;
 	m_size_z.m_z = m_boxSize.m_z;
 	m_size_z.m_w = dgFloat32 (0.0f); 
-
 }
-
-
 
 
 
 dgFloat32 dgCollisionConvex::GetDiscretedAngleStep (dgFloat32 radius) const
 {
-	dgFloat32 segments;
-
 //	segments = GetMax (GetMin (dgFloor (radius * DG_MAX_CIRCLE_DISCRETE_STEPS) + 1.0f, 1024.0f), 128.0f);
-	segments = ClampValue(dgFloor (radius * DG_MAX_CIRCLE_DISCRETE_STEPS), dgFloat32(128.0f), dgFloat32(1024.0f));
+	dgFloat32 segments = ClampValue(dgFloor (radius * DG_MAX_CIRCLE_DISCRETE_STEPS), dgFloat32(128.0f), dgFloat32(1024.0f));
 	return dgPI2 / segments;
 }
 
@@ -883,28 +873,15 @@ dgVector dgCollisionConvex::CalculateVolumeIntegral (const dgPlane& plane) const
 
 
 
-
-
-
-
-
 dgVector dgCollisionConvex::SupportVertex (const dgVector& direction) const
 {
-	dgInt32 i;
-	dgInt32 index;
-	dgInt32 maxCount;
-	dgFloat32 side0;
-	dgFloat32 side1;
-	dgConvexSimplexEdge *ptr;
-	dgConvexSimplexEdge *edge;
 	const dgVector dir (direction.m_x, direction.m_y, direction.m_z, dgFloat32 (0.0f));
-
 	_ASSERTE (dgAbsf(dir % dir - dgFloat32 (1.0f)) < dgFloat32 (1.0e-3f));
 
-	index = 0;
-	side0 = dgFloat32 (-1.0e20f);
-	for (i = 0; i < 4; i ++) {
-		side1 = m_multiResDir[i] % dir;
+	dgInt32 index = 0;
+	dgFloat32 side0 = dgFloat32 (-1.0e20f);
+	for (dgInt32 i = 0; i < 4; i ++) {
+		dgFloat32 side1 = m_multiResDir[i] % dir;
 		if (side1 > side0) {
 			side0 = side1;
 			index = i;
@@ -915,15 +892,15 @@ dgVector dgCollisionConvex::SupportVertex (const dgVector& direction) const
 			index = i + 4;
 		}
 	}
-	edge = m_supportVertexStarCuadrant[index];
+	dgConvexSimplexEdge* edge = m_supportVertexStarCuadrant[index];
 
 	index = edge->m_vertex;
-	side0 = m_vertex[edge->m_vertex] % dir;
-	ptr = edge;
+	side0 = m_vertex[index] % dir;
+	dgConvexSimplexEdge* ptr = edge;
 
-	maxCount = 128;
+	dgInt32 maxCount = 128;
 	do {
-		side1 = m_vertex[ptr->m_twin->m_vertex] % dir;
+		dgFloat32 side1 = m_vertex[ptr->m_twin->m_vertex] % dir;
 		if (side1 > side0) {
 			index = ptr->m_twin->m_vertex;
 			side0 = side1;
@@ -943,36 +920,7 @@ dgVector dgCollisionConvex::SupportVertex (const dgVector& direction) const
 dgVector dgCollisionConvex::SupportVertexSimd (const dgVector& direction) const
 {
 #ifdef DG_BUILD_SIMD_CODE
-//	dgInt32 index;
-//	dgInt32 maxCount;
-//	dgFloat32 side0;
-//	dgFloat32 side1;
-//	dgConvexSimplexEdge *ptr;
-//	dgConvexSimplexEdge *edge;
-//	simd_type dot0;
-//	simd_type dot1;
-//	simd_type mask;
-//	simd_type dir_x;
-//	simd_type dir_y;
-//	simd_type dir_z;
-//	simd_type entry;
-	
 	_ASSERTE (dgAbsf(direction % direction - dgFloat32 (1.0f)) < dgFloat32 (1.0e-3f));
-
-//	index = 0;
-//	side0 = dgFloat32 (-1.0e20f);
-//	for (i = 0; i < 4; i ++) {
-//		side1 = m_multiResDir[i] % dir;
-//		if (side1 > side0) {
-//			side0 = side1;
-//			index = i;
-//		}
-//		side1 *= dgFloat32 (-1.0f);
-//		if (side1 > side0) {
-//			side0 = side1;
-//			index = i + 4;
-//		}
-//	}
 
 	simd_type dir_x = simd_set1 (direction.m_x);
 	simd_type dir_y = simd_set1 (direction.m_y);
@@ -992,20 +940,13 @@ dgVector dgCollisionConvex::SupportVertexSimd (const dgVector& direction) const
 
 	mask = simd_cmpgt_s(dot0, simd_permut_v (dot0, dot0, PURMUT_MASK (3, 2, 1, 1)));
 	
-//	simd_store_s (simd_or_v (simd_and_v(entry, mask), simd_andnot_v (simd_permut_v (entry, entry, PURMUT_MASK (3, 2, 1, 1)), mask)), &side0);
-//	dgInt32 index = dgFastInt (side0);
 	dgInt32 index = simd_store_is (simd_or_v (simd_and_v(entry, mask), simd_andnot_v (simd_permut_v (entry, entry, PURMUT_MASK (3, 2, 1, 1)), mask)));
 	dgConvexSimplexEdge* edge = m_supportVertexStarCuadrant[index];
 	index = edge->m_vertex;
 
-//	const dgVector dir (direction.m_x, direction.m_y, direction.m_z, dgFloat32 (0.0f));
+
 	simd_type dir = simd_set (direction.m_x, direction.m_y, direction.m_z, dgFloat32 (0.0f));
 	_ASSERTE (m_vertex[edge->m_vertex].m_w == dgFloat32 (1.0f));
-//	dgFloat32 side0 = m_vertex[edge->m_vertex] % dir;
-//	dir_x = simd_mul_v (*(simd_type*)&m_vertex[edge->m_vertex], *(simd_type*)&dir);
-//	dir_x = simd_add_s(simd_add_v (dir_x, simd_move_hl_v (dir_x, dir_x)), simd_permut_v (dir_x, dir_x, PURMUT_MASK (3,3,3,1)));
-//	dgFloat32 side0;
-//	simd_store_s (dir_x, &side0);
 
 	simd_type side0 = simd_mul_v (*(simd_type*)&m_vertex[edge->m_vertex], dir);
 	side0 = simd_add_s(simd_add_v (side0, simd_move_hl_v (side0, side0)), simd_permut_v (side0, side0, PURMUT_MASK (3,3,3,1)));
@@ -1014,16 +955,9 @@ dgVector dgCollisionConvex::SupportVertexSimd (const dgVector& direction) const
 	dgInt32 maxCount = 128;
 	do {
 		_ASSERTE (m_vertex[edge->m_twin->m_vertex].m_w == dgFloat32 (1.0f));
-//		dir_x = simd_mul_v (*(simd_type*)&m_vertex[ptr->m_twin->m_vertex], *(simd_type*)&dir);
-//		dir_x = simd_add_s(simd_add_v (dir_x, simd_move_hl_v (dir_x, dir_x)), simd_permut_v (dir_x, dir_x, PURMUT_MASK (3,3,3,1)));
-//		dgFloat32 side1;
-//		simd_store_s (dir_x, &side1);
-
 		simd_type side1 = simd_mul_v (*(simd_type*)&m_vertex[ptr->m_twin->m_vertex], dir);
 		side1 = simd_add_s(simd_add_v (side1, simd_move_hl_v (side1, side1)), simd_permut_v (side1, side1, PURMUT_MASK (3,3,3,1)));
 
-//		dgInt32 xxx = simd_store_is (simd_cmpgt_s(side1, side0));
-//		if (side1 > side0) {
 		if (simd_store_is (simd_cmpgt_s(side1, side0))) {
 			index = ptr->m_twin->m_vertex;
 			side0 = side1;
@@ -1037,10 +971,8 @@ dgVector dgCollisionConvex::SupportVertexSimd (const dgVector& direction) const
 
 	_ASSERTE (index != -1);
 	return m_vertex[index];
-
-
 #else
-	return dgVector (dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f));
+	return SupportVertex(direction);
 #endif
 }
 

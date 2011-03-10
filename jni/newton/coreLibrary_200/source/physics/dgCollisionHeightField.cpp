@@ -202,16 +202,11 @@ void dgCollisionHeightField::GetCollisionInfo(dgCollisionInfo* info) const
 
 void dgCollisionHeightField::CalculateMinExtend2d (const dgVector& p0, const dgVector& p1, dgVector& boxP0, dgVector& boxP1) const
 {
-	dgFloat32 x0;
-	dgFloat32 x1;
-	dgFloat32 z0;
-	dgFloat32 z1;
+	dgFloat32 x0 = GetMin (p0.m_x, p1.m_x) - dgFloat32 (1.0e-3f);
+	dgFloat32 z0 = GetMin (p0.m_z, p1.m_z) - dgFloat32 (1.0e-3f);
 
-	x0 = GetMin (p0.m_x, p1.m_x) - dgFloat32 (1.0e-3f);
-	z0 = GetMin (p0.m_z, p1.m_z) - dgFloat32 (1.0e-3f);
-
-	x1 = GetMax (p0.m_x, p1.m_x) + dgFloat32 (1.0e-3f);
-	z1 = GetMax (p0.m_z, p1.m_z) + dgFloat32 (1.0e-3f);
+	dgFloat32 x1 = GetMax (p0.m_x, p1.m_x) + dgFloat32 (1.0e-3f);
+	dgFloat32 z1 = GetMax (p0.m_z, p1.m_z) + dgFloat32 (1.0e-3f);
 
 	x0 = m_horizontalScale * dgFloor (x0 * m_horizontalScaleInv);
 	z0 = m_horizontalScale * dgFloor (z0 * m_horizontalScaleInv);
@@ -231,19 +226,14 @@ void dgCollisionHeightField::CalculateMinExtend2d (const dgVector& p0, const dgV
 
 void dgCollisionHeightField::CalculateMinExtend3d (const dgVector& p0, const dgVector& p1, dgVector& boxP0, dgVector& boxP1) const
 {
-	dgFloat32 x0;
-	dgFloat32 x1;
-	dgFloat32 z0;
-	dgFloat32 z1;
-
 	_ASSERTE (p0.m_x <= p1.m_x);
 	_ASSERTE (p0.m_y <= p1.m_y);
 	_ASSERTE (p0.m_z <= p1.m_z);
 
-	x0 = m_horizontalScale * dgFloor ((p0.m_x - dgFloat32 (1.0e-3f)) * m_horizontalScaleInv);
-	z0 = m_horizontalScale * dgFloor ((p0.m_z - dgFloat32 (1.0e-3f)) * m_horizontalScaleInv);
-	x1 = m_horizontalScale * dgFloor ((p1.m_x + dgFloat32 (1.0e-3f)) * m_horizontalScaleInv) + m_horizontalScale;
-	z1 = m_horizontalScale * dgFloor ((p1.m_z + dgFloat32 (1.0e-3f)) * m_horizontalScaleInv) + m_horizontalScale;
+	dgFloat32 x0 = m_horizontalScale * dgFloor ((p0.m_x - dgFloat32 (1.0e-3f)) * m_horizontalScaleInv);
+	dgFloat32 z0 = m_horizontalScale * dgFloor ((p0.m_z - dgFloat32 (1.0e-3f)) * m_horizontalScaleInv);
+	dgFloat32 x1 = m_horizontalScale * dgFloor ((p1.m_x + dgFloat32 (1.0e-3f)) * m_horizontalScaleInv) + m_horizontalScale;
+	dgFloat32 z1 = m_horizontalScale * dgFloor ((p1.m_z + dgFloat32 (1.0e-3f)) * m_horizontalScaleInv) + m_horizontalScale;
 
 	boxP0.m_x = GetMax (x0, m_minBox.m_x);
 	boxP0.m_z = GetMax (z0, m_minBox.m_z);
@@ -437,40 +427,27 @@ dgFloat32 dgCollisionHeightField::RayCastSimd (const dgVector& q0, const dgVecto
 
 	// clip the line against the bounding box
 	if (dgRayBoxClip (p0, p1, boxP0, boxP1)) { 
-		dgInt32 xInc;
-		dgInt32 zInc;
-		dgInt32 xIndex0;
-		dgInt32 zIndex0;
-		dgFloat32 t;
-		dgFloat32 tx;
-		dgFloat32 tz;
-		dgFloat32 txAcc;
-		dgFloat32 tzAcc;
-		dgFloat32 val;
-		dgFloat32 stepX;
-		dgFloat32 stepZ;
-		dgFloat32 ix0;
-		dgFloat32 iz0;
-		dgFloat32 scale;
-		dgFloat32 invScale;
-
 		dgVector dp (p1 - p0);
 		dgVector normalOut (dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f));
 
-		scale = m_horizontalScale;
-		invScale = m_horizontalScaleInv;
-		ix0 = dgFloor (p0.m_x * invScale);
-		iz0 = dgFloor (p0.m_z * invScale);
+		dgFloat32 scale = m_horizontalScale;
+		dgFloat32 invScale = m_horizontalScaleInv;
+		dgInt32 ix0 = dgFastInt (p0.m_x * invScale);
+		dgInt32 iz0 = dgFastInt (p0.m_z * invScale);
+
 
 		// implement a 3ddda line algorithm 
+		dgInt32 xInc;
+		dgFloat32 tx;
+		dgFloat32 stepX;
 		if (dp.m_x > dgFloat32 (0.0f)) {
 			xInc = 1;
-			val = dgFloat32 (1.0f) / dp.m_x;
+			dgFloat32 val = dgFloat32 (1.0f) / dp.m_x;
 			stepX = scale * val;
 			tx = (scale * (ix0 + dgFloat32 (1.0f)) - p0.m_x) * val;
 		} else if (dp.m_x < dgFloat32 (0.0f)) {
 			xInc = -1;
-			val = -dgFloat32 (1.0f) / dp.m_x;
+			dgFloat32 val = -dgFloat32 (1.0f) / dp.m_x;
 			stepX = scale * val;
 			tx = -(scale * ix0 - p0.m_x) * val;
 		} else {
@@ -479,14 +456,17 @@ dgFloat32 dgCollisionHeightField::RayCastSimd (const dgVector& q0, const dgVecto
 			tx = dgFloat32 (1.0e10f);
 		}
 
+		dgInt32 zInc;
+		dgFloat32 stepZ;
+		dgFloat32 tz;
 		if (dp.m_z > dgFloat32 (0.0f)) {
 			zInc = 1;
-			val = dgFloat32 (1.0f) / dp.m_z;
+			dgFloat32 val = dgFloat32 (1.0f) / dp.m_z;
 			stepZ = scale * val;
 			tz = (scale * (iz0 + dgFloat32 (1.0f)) - p0.m_z) * val;
 		} else if (dp.m_z < dgFloat32 (0.0f)) {
 			zInc = -1;
-			val = -dgFloat32 (1.0f) / dp.m_z;
+			dgFloat32 val = -dgFloat32 (1.0f) / dp.m_z;
 			stepZ = scale * val;
 			tz = -(scale * iz0 - p0.m_z) * val;
 		} else {
@@ -495,15 +475,15 @@ dgFloat32 dgCollisionHeightField::RayCastSimd (const dgVector& q0, const dgVecto
 			tz = dgFloat32 (1.0e10f);
 		}
 
-		txAcc = tx;
-		tzAcc = tz;
-		xIndex0 = dgFastInt (ix0);
-		zIndex0 = dgFastInt (iz0);
+		dgFloat32 txAcc = tx;
+		dgFloat32 tzAcc = tz;
+		dgInt32 xIndex0 = ix0;
+		dgInt32 zIndex0 = iz0;
 		FastRayTest ray (q0, q1); 
 
 		// for each cell touched by the line
 		do {
-			t = RayCastCellSimd (ray, xIndex0, zIndex0, normalOut);
+			dgFloat32 t = RayCastCellSimd (ray, xIndex0, zIndex0, normalOut);
 			if (t < dgFloat32 (1.0f)) {
 				// bail out at the first intersection and copy the data into the descriptor
 				contactOut.m_normal = normalOut.Scale (dgFloat32 (1.0f) / dgSqrt (normalOut % normalOut));
@@ -562,40 +542,26 @@ dgFloat32 dgCollisionHeightField::RayCast (
 
 	// clip the line against the bounding box
 	if (dgRayBoxClip (p0, p1, boxP0, boxP1)) { 
-		dgInt32 xInc;
-		dgInt32 zInc;
-		dgInt32 xIndex0;
-		dgInt32 zIndex0;
-		dgFloat32 t;
-		dgFloat32 tx;
-		dgFloat32 tz;
-		dgFloat32 txAcc;
-		dgFloat32 tzAcc;
-		dgFloat32 val;
-		dgFloat32 stepX;
-		dgFloat32 stepZ;
-		dgFloat32 ix0;
-		dgFloat32 iz0;
-		dgFloat32 scale;
-		dgFloat32 invScale;
-
 		dgVector dp (p1 - p0);
 		dgVector normalOut (dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f), dgFloat32 (0.0f));
 
-		scale = m_horizontalScale;
-		invScale = m_horizontalScaleInv;
-		ix0 = dgFloor (p0.m_x * invScale);
-		iz0 = dgFloor (p0.m_z * invScale);
+		dgFloat32 scale = m_horizontalScale;
+		dgFloat32 invScale = m_horizontalScaleInv;
+		dgInt32 ix0 = dgFastInt (p0.m_x * invScale);
+		dgInt32 iz0 = dgFastInt (p0.m_z * invScale);
 
 		// implement a 3ddda line algorithm 
+		dgInt32 xInc;
+		dgFloat32 tx;
+		dgFloat32 stepX;
 		if (dp.m_x > dgFloat32 (0.0f)) {
 			xInc = 1;
-			val = dgFloat32 (1.0f) / dp.m_x;
+			dgFloat32 val = dgFloat32 (1.0f) / dp.m_x;
 			stepX = scale * val;
 			tx = (scale * (ix0 + dgFloat32 (1.0f)) - p0.m_x) * val;
 		} else if (dp.m_x < dgFloat32 (0.0f)) {
 			xInc = -1;
-			val = -dgFloat32 (1.0f) / dp.m_x;
+			dgFloat32 val = -dgFloat32 (1.0f) / dp.m_x;
 			stepX = scale * val;
 			tx = -(scale * ix0 - p0.m_x) * val;
 		} else {
@@ -604,14 +570,17 @@ dgFloat32 dgCollisionHeightField::RayCast (
 			tx = dgFloat32 (1.0e10f);
 		}
 
+		dgInt32 zInc;
+		dgFloat32 stepZ;
+		dgFloat32 tz;
 		if (dp.m_z > dgFloat32 (0.0f)) {
 			zInc = 1;
-			val = dgFloat32 (1.0f) / dp.m_z;
+			dgFloat32 val = dgFloat32 (1.0f) / dp.m_z;
 			stepZ = scale * val;
 			tz = (scale * (iz0 + dgFloat32 (1.0f)) - p0.m_z) * val;
 		} else if (dp.m_z < dgFloat32 (0.0f)) {
 			zInc = -1;
-			val = -dgFloat32 (1.0f) / dp.m_z;
+			dgFloat32 val = -dgFloat32 (1.0f) / dp.m_z;
 			stepZ = scale * val;
 			tz = -(scale * iz0 - p0.m_z) * val;
 		} else {
@@ -620,16 +589,15 @@ dgFloat32 dgCollisionHeightField::RayCast (
 			tz = dgFloat32 (1.0e10f);
 		}
 
-		txAcc = tx;
-		tzAcc = tz;
-		xIndex0 = dgFastInt (ix0);
-		zIndex0 = dgFastInt (iz0);
-
+		dgFloat32 txAcc = tx;
+		dgFloat32 tzAcc = tz;
+		dgInt32 xIndex0 = ix0;
+		dgInt32 zIndex0 = iz0;
 		FastRayTest ray (q0, q1); 
 
 		// for each cell touched by the line
 		do {
-			t = RayCastCell (ray, xIndex0, zIndex0, normalOut);
+			dgFloat32 t = RayCastCell (ray, xIndex0, zIndex0, normalOut);
 			if (t < dgFloat32 (1.0f)) {
 				// bail out at the first intersection and copy the data into the descriptor
 				contactOut.m_normal = normalOut.Scale (dgFloat32 (1.0f) / dgSqrt (normalOut % normalOut));

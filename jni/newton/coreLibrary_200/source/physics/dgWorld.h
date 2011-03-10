@@ -83,7 +83,7 @@ class dgBodyMaterialList: public dgTree<dgContactMaterial, dgUnsigned32>
 	}
 };
 
-class dgCollisionParamProxi;
+class dgCollisionParamProxy;
 
 enum dgPerformanceCounters
 {
@@ -308,40 +308,40 @@ class dgWorld:
 	dgInt32 ReduceContacts (dgInt32 count, dgContactPoint* const contact, dgInt32 maxCount, dgFloat32 tol, dgInt32 arrayIsSorted = 0) const;
 	dgInt32 PruneContacts (dgInt32 count, dgContactPoint* const contact, dgInt32 maxCount = (DG_CONSTRAINT_MAX_ROWS / 3)) const;
 
-	dgInt32 CalculateHullToHullContacts (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculateHullToHullContactsSimd (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculateBoxToSphereContacts (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculateSphereToSphereContacts (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculateCapsuleToSphereContacts (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculateCapsuleToCapsuleContacts (dgCollisionParamProxi& proxi) const;
-	dgInt32 SphereSphereCollision (const dgVector& sph0, dgFloat32 radius0, const dgVector& sph1, dgFloat32 radius1, dgCollisionParamProxi& proxi) const;  
+	dgInt32 CalculateHullToHullContacts (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculateHullToHullContactsSimd (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculateBoxToSphereContacts (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculateSphereToSphereContacts (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculateCapsuleToSphereContacts (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculateCapsuleToCapsuleContacts (dgCollisionParamProxy& proxy) const;
+	dgInt32 SphereSphereCollision (const dgVector& sph0, dgFloat32 radius0, const dgVector& sph1, dgFloat32 radius1, dgCollisionParamProxy& proxy) const;  
 
 	
 	dgInt32 ValidateContactCache (dgBody* const convexBody, dgBody* const otherBody, dgContact* const contact) const;
 
 
 	dgInt32 CalculatePolySoupToBoxContactsDescrete (dgBody* soup, dgBody* box, dgContactPoint* const contact, dgInt32 maxContacts) const;
-	dgInt32 CalculatePolySoupToHullContactsDescrete (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculatePolySoupToHullContactsDescreteSimd (dgCollisionParamProxi& proxi) const;
+	dgInt32 CalculatePolySoupToHullContactsDescrete (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculatePolySoupToHullContactsDescreteSimd (dgCollisionParamProxy& proxy) const;
 
-	dgInt32 CalculatePolySoupToSphereContactsDescrete (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculatePolySoupToElipseContactsDescrete (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculatePolySoupToSphereContactsContinue (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculateConvexToNonConvexContactsContinue (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculateConvexToNonConvexContactsContinueSimd (dgCollisionParamProxi& proxi) const;
+	dgInt32 CalculatePolySoupToSphereContactsDescrete (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculatePolySoupToElipseContactsDescrete (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculatePolySoupToSphereContactsContinue (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculateConvexToNonConvexContactsContinue (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculateConvexToNonConvexContactsContinueSimd (dgCollisionParamProxy& proxy) const;
 
 	
 //	dgInt32 CalculateConvexToConvexContinuesContacts (dgFloat32& timestep, dgBody* body1, dgBody* body2, dgContactPoint contactOut[]) const; 
-//	dgInt32 CalculateConvexToConvexContinuesContacts (dgCollisionParamProxi& proxi) const; 
-//	dgInt32 CalculateConvexToConvexContinuesContacts (dgCollisionParamProxi& proxi) const; 
+//	dgInt32 CalculateConvexToConvexContinuesContacts (dgCollisionParamProxy& proxy) const; 
+//	dgInt32 CalculateConvexToConvexContinuesContacts (dgCollisionParamProxy& proxy) const; 
 //	dgInt32 CalculateConvexToConvexContacts (dgFloat32& timestep, dgBody* conv1, dgBody* conv2, dgFloat32 penetrationPadding, dgContactPoint* const contact) const;
 //	dgInt32 CalculateConvexToConvexContactsSimd (dgFloat32& timestep, dgBody* conv1, dgBody* conv2, dgFloat32 penetrationPadding, dgContactPoint* const contact) const;
-	dgInt32 CalculateConvexToConvexContacts (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculateConvexToConvexContactsSimd (dgCollisionParamProxi& proxi) const;
+	dgInt32 CalculateConvexToConvexContacts (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculateConvexToConvexContactsSimd (dgCollisionParamProxy& proxy) const;
 	
 //	dgInt32 CalculateConvexToNonConvexContacts (dgFloat32& timestep, dgBody* conv, dgBody* nConv, dgContactPoint* const contact, dgInt32 maxContacts) const;
-	dgInt32 CalculateConvexToNonConvexContacts (dgCollisionParamProxi& proxi) const;
-	dgInt32 CalculateConvexToNonConvexContactsSimd (dgCollisionParamProxi& proxi) const;
+	dgInt32 CalculateConvexToNonConvexContacts (dgCollisionParamProxy& proxy) const;
+	dgInt32 CalculateConvexToNonConvexContactsSimd (dgCollisionParamProxy& proxy) const;
 
 	dgInt32 FilterPolygonEdgeContacts (dgInt32 count, dgContactPoint* const contact) const;
 
@@ -349,18 +349,18 @@ class dgWorld:
 	void ProcessContacts (dgCollidingPairCollector::dgPair* const pair, dgFloat32 timestep, dgInt32 threadIndex);
 	void ProcessCachedContacts (dgContact* const contact, const dgContactMaterial* const material, dgFloat32 timestep, dgInt32 threadIndex) const;
 
-	void ConvexContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
-	void ConvexContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
-	void CompoundContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
-	void CompoundContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
+	void ConvexContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
+	void ConvexContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
+	void CompoundContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
+	void CompoundContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
 
-	void SceneContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
-	void SceneContacts (const dgCollisionScene::dgProxy& sceneProxy, dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
+	void SceneContacts (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
+	void SceneContacts (const dgCollisionScene::dgProxy& sceneProxy, dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
 	
-	void SceneContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
-	void SceneContactsSimd (const dgCollisionScene::dgProxy& sceneProxy, dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxi& proxi) const;
+	void SceneContactsSimd (dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
+	void SceneContactsSimd (const dgCollisionScene::dgProxy& sceneProxy, dgCollidingPairCollector::dgPair* const pair, dgCollisionParamProxy& proxy) const;
 
-	dgInt32 ClosestPoint (dgCollisionParamProxi& proxi) const;
+	dgInt32 ClosestPoint (dgCollisionParamProxy& proxy) const;
 	dgInt32 ClosestCompoundPoint (dgBody* const compoundConvexA, dgBody* const collisionB, dgTriplex& contactA, dgTriplex& contactB, dgTriplex& normalAB, dgInt32 threadIndex) const;
 
 	bool AreBodyConnectedByJoints (dgBody* const origin, dgBody* const target);

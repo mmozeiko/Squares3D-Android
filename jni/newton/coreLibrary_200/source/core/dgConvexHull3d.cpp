@@ -112,14 +112,13 @@ dgConvexHull3d::dgConvexHull3d (dgMemoryAllocator* const allocator)
 }
 
 
-dgConvexHull3d::dgConvexHull3d(dgMemoryAllocator* const allocator, const dgFloat32* const vertexCloud, dgInt32 strideInByte, dgInt32 count, dgFloat32 distTol)
+dgConvexHull3d::dgConvexHull3d(dgMemoryAllocator* const allocator, const dgFloat32* const vertexCloud, dgInt32 strideInByte, dgInt32 count, dgFloat32 distTol, dgInt32 maxVertexCount)
 	:dgList<dgConvexHull3DFace>(allocator),  m_count (0), m_diag(), m_points(count, allocator) 
 {
 #if (defined (_WIN_32_VER) || defined (_WIN_64_VER))
 	dgUnsigned32 controlWorld = dgControlFP (0xffffffff, 0);
 	dgControlFP (_PC_53, _MCW_PC);
 #endif
-
 	
 
 	dgInt32 treeCount = count / (DG_VERTEX_CLUMP_SIZE_3D>>1); 
@@ -130,11 +129,11 @@ dgConvexHull3d::dgConvexHull3d(dgMemoryAllocator* const allocator, const dgFloat
 
 	dgStack<dgBigVector> points (count);
 	dgStack<dgBigVector> convexPoints (count);
-	dgStack<dgAABBPointTree3dClump> treePool (treeCount);
+	dgStack<dgAABBPointTree3dClump> treePool (treeCount + 256);
 
 	count = InitVertexArray(&convexPoints[0], &points[0], vertexCloud, strideInByte, count, &treePool[0], treePool.GetSizeInBytes());
 	if (m_count >= 4) {
-		CalculateConvexHull (&treePool[0], &convexPoints[0], &points[0], count, distTol);
+		CalculateConvexHull (&treePool[0], &convexPoints[0], &points[0], count, distTol, maxVertexCount);
 
 		m_points[m_count].m_x = 0.0f;
 		dgVector* const points = &m_points[0];
@@ -645,12 +644,7 @@ bool dgConvexHull3d::Sanity() const
 	return true;
 }
 
-void dgConvexHull3d::CalculateConvexHull (
-	dgAABBPointTree3d* vertexTree, 
-	dgBigVector* const hullVertexArray, 
-	dgBigVector* const points, 
-	dgInt32 count, 
-	dgFloat32 distTol)
+void dgConvexHull3d::CalculateConvexHull (dgAABBPointTree3d* vertexTree, dgBigVector* const hullVertexArray, dgBigVector* const points, dgInt32 count, dgFloat32 distTol, dgInt32 maxVertexCount)
 {
 	distTol = dgAbsf (distTol) * m_diag;
 	dgListNode* const f0Node = AddFace (0, 1, 2);
@@ -695,8 +689,9 @@ void dgConvexHull3d::CalculateConvexHull (
 	dgListNode** const deleteList = &deleteListPool[0];
 
 	count -= 4;
+	maxVertexCount -= 4;
 	dgInt32 currentIndex = 4;
-	while (boundaryFaces.GetCount() && count) {
+	while (boundaryFaces.GetCount() && count && (maxVertexCount > 0)) {
 
 		dgListNode* const faceNode = boundaryFaces.GetFirst()->GetInfo();
 		dgConvexHull3DFace* const face = &faceNode->GetInfo();
@@ -807,6 +802,7 @@ void dgConvexHull3d::CalculateConvexHull (
 				DeleteFace (node); 
 			}
 
+			maxVertexCount --;
 			currentIndex ++;
 			count --;
 		} else {

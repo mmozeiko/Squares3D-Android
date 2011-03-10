@@ -400,7 +400,7 @@ void dgBody::AddBuoyancyForce (
 			dgFloat32 damp = GetMax (GetMin ((m_veloc % m_veloc) * dgFloat32 (100.0f) * fluidLinearViscousity, dgFloat32(dgFloat32 (1.0f))), dgFloat32(dgFloat32 (10.0f)));
 			force -= m_veloc.Scale (damp);
 
-			damp = (m_omega % m_omega) * dgFloat32 (10.0f) * fluidAngularViscousity;
+			//damp = (m_omega % m_omega) * dgFloat32 (10.0f) * fluidAngularViscousity;
 			damp = GetMax (GetMin ((m_omega % m_omega) * dgFloat32 (1000.0f) * fluidAngularViscousity, dgFloat32(0.25f)), dgFloat32(2.0f));
 			torque -= m_omega.Scale (damp);
 
@@ -555,7 +555,12 @@ void dgBody::UpdateMatrix (dgFloat32 timestep, dgInt32 threadIndex)
 		m_matrixUpdate (*this, m_matrix, threadIndex);
 //		m_world->dgReleasedUserLock_();
 	}
-	UpdateCollisionMatrix (timestep, threadIndex);
+//	UpdateCollisionMatrix (timestep, threadIndex);
+	if (m_world->m_cpu == dgSimdPresent) {
+		UpdateCollisionMatrixSimd (timestep, threadIndex);
+	} else {
+		UpdateCollisionMatrix (timestep, threadIndex);
+	}
 }
 
 void dgBody::IntegrateVelocity (dgFloat32 timestep)

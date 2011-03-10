@@ -25,8 +25,6 @@ public:
 
 private:
     unsigned int m_handle;
-    bool m_mipmaps;
-    WrapType m_wrap;
 };
 
 #endif

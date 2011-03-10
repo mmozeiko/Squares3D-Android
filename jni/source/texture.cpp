@@ -4,7 +4,7 @@
 #include "config.h"
 #include "dds.h"
 
-Texture::Texture(const string& name, WrapType wrap) : m_wrap(wrap)
+Texture::Texture(const string& name, WrapType wrap)
 {
     glGenTextures(1, (GLuint*)&m_handle);
     glBindTexture(GL_TEXTURE_2D, m_handle);
@@ -48,8 +48,8 @@ Texture::Texture(const string& name, WrapType wrap) : m_wrap(wrap)
             }
             else
             {
-                size = width * height * 2;
-                glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, ptr);
+                size = width * height * 4;
+                glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, ptr);
             }
             
             level++;
@@ -59,7 +59,11 @@ Texture::Texture(const string& name, WrapType wrap) : m_wrap(wrap)
         }
     }
 
-    m_mipmaps = header->dwMipMapCount > 1;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, header->dwMipMapCount > 1 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 Texture::~Texture()
@@ -71,12 +75,4 @@ void Texture::bind() const
 {
     glBindTexture(GL_TEXTURE_2D, m_handle);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, m_wrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, m_wrap == Repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_mipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
